@@ -1,0 +1,72 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\FinanceAPI\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\financereact\\src\\services\\sampleService.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AEDF1FA7-162A-35D8-3A36-D62849280BC7}|FinanceAPI\\FinanceAPI.csproj|c:\\trinadh\\personal\\budget\\githubcopilot\\financeapi\\financeapi\\financeapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{AEDF1FA7-162A-35D8-3A36-D62849280BC7}|FinanceAPI\\FinanceAPI.csproj|solutionrelative:financeapi\\financeapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AEDF1FA7-162A-35D8-3A36-D62849280BC7}|FinanceAPI\\FinanceAPI.csproj|c:\\trinadh\\personal\\budget\\githubcopilot\\financeapi\\financeapi\\data\\financedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AEDF1FA7-162A-35D8-3A36-D62849280BC7}|FinanceAPI\\FinanceAPI.csproj|solutionrelative:financeapi\\data\\financedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "sampleService.js",
+              "DocumentMoniker": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\financereact\\src\\services\\sampleService.js",
+              "RelativeDocumentMoniker": "..\\financereact\\src\\services\\sampleService.js",
+              "ToolTip": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\financereact\\src\\services\\sampleService.js",
+              "RelativeToolTip": "..\\financereact\\src\\services\\sampleService.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-06-15T07:23:59.864Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FinanceAPI.http",
+              "DocumentMoniker": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\FinanceAPI\\FinanceAPI\\FinanceAPI.http",
+              "RelativeDocumentMoniker": "FinanceAPI\\FinanceAPI.http",
+              "ToolTip": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\FinanceAPI\\FinanceAPI\\FinanceAPI.http",
+              "RelativeToolTip": "FinanceAPI\\FinanceAPI.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2025-06-15T07:23:45.994Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "FinanceDbContext.cs",
+              "DocumentMoniker": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\FinanceAPI\\FinanceAPI\\Data\\FinanceDbContext.cs",
+              "RelativeDocumentMoniker": "FinanceAPI\\Data\\FinanceDbContext.cs",
+              "ToolTip": "C:\\Trinadh\\Personal\\Budget\\GithubCoPilot\\FinanceAPI\\FinanceAPI\\Data\\FinanceDbContext.cs",
+              "RelativeToolTip": "FinanceAPI\\Data\\FinanceDbContext.cs",
+              "ViewState": "AgIAAJgBAAAAAAAAAAAAAC4AAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-14T20:43:44.153Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
