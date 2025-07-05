@@ -1,0 +1,97 @@
+.roundedDropdown {
+  border-radius: 20px;
+  border: 1px solid #1976d2;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
+  font-size: 16px;
+  outline: none;
+  height: 35px;
+  box-sizing: border-box;
+  padding: 0;
+  width: 100%;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.roundedDropdown select {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  border-radius: 20px;
+  height: 35px;
+  padding: 0 64px 0 16px;
+  width: 100%;
+  outline: none;
+  color: #222;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+}
+.roundedDropdown:disabled,
+.roundedDropdown select:disabled {
+  background: #f0f0f0;
+  color: #aaa;
+}
+.roundedDropdown.custom {
+  border-radius: 20px;
+  border: 1px solid #1976d2;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
+  font-size: 16px;
+  outline: none;
+  height: 35px;
+  box-sizing: border-box;
+  padding: 0;
+  width: 100%;
+  transition: border 0.2s, box-shadow 0.2s;
+  position: relative;
+  min-width: 140px;
+  max-width: 100%;
+  z-index: 1;
+}
+.roundedDropdown-display {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  cursor: pointer;
+  width: 100%;
+  background: transparent;
+  border-radius: 20px;
+}
+.roundedDropdown-arrow {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  width: 24px;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+}
+.roundedDropdown-list {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1.5px solid #1976d2;
+  border-radius: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+  top: 100%;
+}
+.roundedDropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.roundedDropdown-item.highlighted {
+  background: #e3f0fd;
+  color: #1976d2;
+  font-weight: 600;
+}

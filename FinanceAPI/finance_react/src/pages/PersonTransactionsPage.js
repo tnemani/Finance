@@ -6,6 +6,8 @@ import { gridTheme, currencyOptions } from '../components/gridTheme';
 import { ActionButton } from '../components/ActionButton';
 import { fetchUsers } from '../utils/userApi';
 import ConfirmModal from '../components/ConfirmModal';
+import RoundedInput from '../components/RoundedInput';
+import RoundedDropdown from '../components/RoundedDropdown';
 
 const SUMMARY_API_URL = 'http://localhost:5226/api/persontransactions';
 const SUMMARY_API_SUMMARY_URL = 'http://localhost:5226/api/persontransactions/summary';
@@ -306,7 +308,7 @@ function PersonTransactionsPage() {
       />
       <GridBanner
         icon={earningsBanner}
-        title="Person Transactions Summary"
+        title="Person Incomes"
         searchText={searchText}
         setSearchText={setSearchText}
         placeholder="Search summary..."
@@ -315,9 +317,9 @@ function PersonTransactionsPage() {
         iconStyle={{ height: 40, display: 'inline-block' }}
       />
       <div style={{ height: 12 }} />
-      <div style={{ width: 1000, minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>
+      <div style={{ width: 'auto', minWidth: 0, margin: '0 auto', maxWidth: '100%', display: 'flex', justifyContent: 'center' }}>
         <div style={{ ...gridTheme.scrollContainer, maxHeight: 600, overflowY: 'auto' }}>
-          <table style={gridTheme.table}>
+          <table style={{ ...gridTheme.table, width: 'auto', tableLayout: 'auto', margin: '0 auto' }}>
             <thead>
               <tr>
                 <th style={gridTheme.th}></th>
@@ -332,49 +334,28 @@ function PersonTransactionsPage() {
               <tr>
                 <td style={gridTheme.td}></td>
                 <td style={gridTheme.td}>
-                  <select
+                  <RoundedDropdown
                     value={newRow.sourceShortName || ''}
                     onChange={e => setNewRow({ ...newRow, sourceShortName: e.target.value })}
-                    style={gridTheme.roundedSelectTheme}
-                  >
-                    <option value=''>Select</option>
-                    {userOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    options={[{ value: '', label: 'Select' }, ...userOptions]}
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <input
-                      type="number"
-                      value={newRow.netAmount || ''}
-                      onChange={e => setNewRow({ ...newRow, netAmount: e.target.value })}
-                      placeholder="Total Amount"
-                      style={gridTheme.roundedInputTheme}
-                    />
-                    <select
+                    <RoundedInput type="number" value={newRow.netAmount || ''} onChange={e => setNewRow({ ...newRow, netAmount: e.target.value })} placeholder="Total Amount" />
+                    <RoundedDropdown
                       value={newRow.currency || ''}
                       onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
-                      style={gridTheme.roundedSelectTheme}
-                    >
-                      <option value=''>Currency</option>
-                      {currencyOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                      options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
+                    />
                   </div>
                 </td>
                 <td style={gridTheme.td}>
-                  <select
+                  <RoundedDropdown
                     value={newRow.destinationShortName || ''}
                     onChange={e => setNewRow({ ...newRow, destinationShortName: e.target.value })}
-                    style={gridTheme.roundedSelectTheme}
-                  >
-                    <option value=''>Select</option>
-                    {userOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    options={[{ value: '', label: 'Select' }, ...userOptions]}
+                  />
                 </td>
                 <td style={{ border: '1px solid #ccc', padding: 4, verticalAlign: 'middle', minWidth: 90 }}>
                   <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
@@ -402,49 +383,28 @@ function PersonTransactionsPage() {
                     {editRowId === idx ? (
                       <>
                         <td style={gridTheme.td}>
-                          <select
+                          <RoundedDropdown
                             value={editRowData.sourceShortName || ''}
                             onChange={e => handleRowChange(e, 'sourceShortName')}
-                            style={{...gridTheme.roundedSelectTheme, border: '1.5px solid #1976d2'}}
-                          >
-                            <option value=''>Select</option>
-                            {userOptions.map(opt => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                            options={[{ value: '', label: 'Select' }, ...userOptions]}
+                          />
                         </td>
                         <td style={gridTheme.td}>
                           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <input
-                              type="number"
-                              value={editRowData.netAmount || ''}
-                              onChange={e => handleRowChange(e, 'netAmount')}
-                              placeholder="Total Amount"
-                              style={{...gridTheme.roundedInputTheme, border: '1.5px solid #1976d2'}}
-                            />
-                            <select
+                            <RoundedInput type="number" value={editRowData.netAmount || ''} onChange={e => handleRowChange(e, 'netAmount')} style={{ border: '1.5px solid #1976d2' }} placeholder="Total Amount" />
+                            <RoundedDropdown
                               value={editRowData.currency || ''}
                               onChange={e => handleRowChange(e, 'currency')}
-                              style={{...gridTheme.roundedSelectTheme, border: '1.5px solid #1976d2'}}
-                            >
-                              <option value=''>Currency</option>
-                              {currencyOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
+                              options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
+                            />
                           </div>
                         </td>
                         <td style={gridTheme.td}>
-                          <select
+                          <RoundedDropdown
                             value={editRowData.destinationShortName || ''}
                             onChange={e => handleRowChange(e, 'destinationShortName')}
-                            style={{...gridTheme.roundedSelectTheme, border: '1.5px solid #1976d2'}}
-                          >
-                            <option value=''>Select</option>
-                            {userOptions.map(opt => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                            options={[{ value: '', label: 'Select' }, ...userOptions]}
+                          />
                         </td>
                         <td style={{ minWidth: 90 }}>
                           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
@@ -490,40 +450,16 @@ function PersonTransactionsPage() {
                                 {editDetail.idx === idx && editDetail.detailIdx === i ? (
                                   <>
                                     <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <input
-                                        type="text"
-                                        value={editDetail.data.purpose || ''}
-                                        onChange={e => handleDetailChange(e, 'purpose')}
-                                        placeholder="Purpose"
-                                        style={{...gridTheme.roundedInputTheme, border: '1.5px solid #1976d2', fontSize: 13}}
-                                      />
+                                      <RoundedInput value={editDetail.data.purpose || ''} onChange={e => handleDetailChange(e, 'purpose')} placeholder="Purpose" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
                                     </td>
                                     <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <input
-                                        type="number"
-                                        value={editDetail.data.amount || ''}
-                                        onChange={e => handleDetailChange(e, 'amount')}
-                                        placeholder="Amount"
-                                        style={{...gridTheme.roundedInputTheme, border: '1.5px solid #1976d2', fontSize: 13}}
-                                      />
+                                      <RoundedInput type="number" value={editDetail.data.amount || ''} onChange={e => handleDetailChange(e, 'amount')} placeholder="Amount" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
                                     </td>
                                     <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <input
-                                        type="date"
-                                        value={editDetail.data.scheduleDate ? new Date(editDetail.data.scheduleDate).toISOString().slice(0, 10) : ''}
-                                        onChange={e => handleDetailChange(e, 'scheduleDate')}
-                                        placeholder="Schedule Date"
-                                        style={{...gridTheme.roundedInputTheme, border: '1.5px solid #1976d2', fontSize: 13}}
-                                      />
+                                      <RoundedInput type="date" value={editDetail.data.scheduleDate ? new Date(editDetail.data.scheduleDate).toISOString().slice(0, 10) : ''} onChange={e => handleDetailChange(e, 'scheduleDate')} placeholder="Schedule Date" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
                                     </td>
                                     <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <input
-                                        type="text"
-                                        value={editDetail.data.status || ''}
-                                        onChange={e => handleDetailChange(e, 'status')}
-                                        placeholder="Status"
-                                        style={{...gridTheme.roundedInputTheme, border: '1.5px solid #1976d2', fontSize: 13}}
-                                      />
+                                      <RoundedInput value={editDetail.data.status || ''} onChange={e => handleDetailChange(e, 'status')} placeholder="Status" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
                                     </td>
                                     <td style={{ ...gridTheme.td, fontSize: 13, minWidth: 70 }}>
                                       <div style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>

@@ -1,0 +1,23 @@
+﻿
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : [{"id":1,"lastName":"Nemani","firstName":"Narasimha","middleName":"Trinadh","mobile1":"0014252335348","mobile2":"011919440543132","landLine":"0014252235007","officeNo":"","email1":"tn
+                    emani@gmail.com",...
+RawContent        : HTTP/1.1 200 OK
+                    Transfer-Encoding: chunked
+                    Content-Type: application/json; charset=utf-8
+                    Date: Tue, 01 Jul 2025 02:51:25 GMT
+                    Server: Kestrel
+                    
+                    [{"id":1,"lastName":"Nemani","firstName":"Narasimha"...
+Forms             : {}
+Headers           : {[Transfer-Encoding, chunked], [Content-Type, application/json; charset=utf-8], [Date, Tue, 01 Jul 2025 02:51:25 GMT], [Server, Kestrel]}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : mshtml.HTMLDocumentClass
+RawContentLength  : 10275
+
+
+

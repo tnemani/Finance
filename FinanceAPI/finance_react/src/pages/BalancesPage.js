@@ -3,6 +3,17 @@ import axios from 'axios';
 import { ActionButton } from '../components/ActionButton';
 import GridBanner from '../components/GridBanner';
 import { gridTheme, currencyOptions } from '../components/gridTheme';
+import RoundedInput from '../components/RoundedInput';
+import RoundedDropdown from '../components/RoundedDropdown';
+
+// Helper to measure text width in px for a given font
+function getTextWidth(text, font = '16px Arial') {
+  if (typeof document === 'undefined') return 120; // fallback for SSR
+  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
+  const context = canvas.getContext('2d');
+  context.font = font;
+  return context.measureText(text).width;
+}
 
 function BalancesPage() {
   const [balances, setBalances] = useState([]);
@@ -11,9 +22,9 @@ function BalancesPage() {
   const [newRow, setNewRow] = useState({});
   const [searchText, setSearchText] = useState('');
   const [filteredBalances, setFilteredBalances] = useState([]);
+  const [remarksList, setRemarksList] = useState(filteredBalances.map(b => b.remarks || ''));
 
   useEffect(() => { fetchBalances(); }, []);
-
   useEffect(() => {
     let sorted = [...balances];
     sorted.sort((a, b) => {
@@ -35,6 +46,9 @@ function BalancesPage() {
       ));
     }
   }, [searchText, balances]);
+  useEffect(() => {
+    setRemarksList(filteredBalances.map(b => b.remarks || ''));
+  }, [filteredBalances]);
 
   const fetchBalances = async () => {
     const res = await axios.get('/api/Balances');
@@ -135,8 +149,34 @@ function BalancesPage() {
     return num;
   };
 
+  const bankNameFont = '16px Arial'; // match your input font
+  const allBankNames = [
+    (newRow.bankName || '').trim(),
+    ...filteredBalances.map(b => (b.bankName || '').trim()),
+    (editRowData.bankName || '').trim()
+  ];
+  const maxBankNameWidth = Math.max(120, ...allBankNames.map(name => getTextWidth(name, bankNameFont))) + 24; // 24px buffer for padding/border
+
+  const inputFont = '16px Arial'; // match your input font
+  const getMaxWidth = (values, min = 90, buffer = 16) => Math.max(min, ...values.map(v => getTextWidth(String(v ?? '').trim(), inputFont))) + buffer;
+
+  const allRequired = [newRow.requiredAmount, ...filteredBalances.map(b => b.requiredAmount), editRowData.requiredAmount];
+  const allInProgress = [newRow.inProgressAmount, ...filteredBalances.map(b => b.inProgressAmount), editRowData.inProgressAmount];
+  const allBalance = [newRow.balanceAmount, ...filteredBalances.map(b => b.balanceAmount), editRowData.balanceAmount];
+  const allRemarks = [newRow.remarks, ...filteredBalances.map(b => b.remarks), editRowData.remarks];
+
+  const maxRequiredWidth = getMaxWidth(allRequired);
+  const maxInProgressWidth = getMaxWidth(allInProgress);
+  const maxBalanceWidth = getMaxWidth(allBalance);
+  const maxRemarksWidth = getMaxWidth(allRemarks, 120);
+
+  const totalGridMinWidth = maxBankNameWidth + maxRequiredWidth + maxInProgressWidth + maxBalanceWidth + maxRemarksWidth + 140; // reduced buffer for action buttons and padding
+
+  // Example: Show a rounded list of all unique currencies in the balances table
+  const uniqueCurrencies = Array.from(new Set(filteredBalances.map(b => b.currency).filter(Boolean)));
+
   return (
-    <div style={{ padding: 20, paddingTop: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 20, paddingTop: 0 }}>
       <GridBanner
         icon={require('../components/icons/balances_banner.png')}
         title="Balances"
@@ -148,10 +188,24 @@ function BalancesPage() {
         iconStyle={{ height: 40, display: 'inline-block' }}
       />
       <div style={{ height: 12 }} />
-      <div style={{ width: 1000, minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>
+      {/* Example usage of RoundedList: show all unique currencies in a rounded list */}
+      {/* <div style={{ marginBottom: 16, width: '100%', maxWidth: 400 }}>
+        <label style={{ fontWeight: 500, marginBottom: 4, display: 'block' }}>Currencies in Balances:</label>
+        <RoundedList
+          items={uniqueCurrencies.length ? uniqueCurrencies : ['No currencies']}
+          style={{
+            border: gridTheme.roundedInputTheme.border,
+            borderRadius: gridTheme.roundedInputTheme.borderRadius,
+            background: gridTheme.roundedInputTheme.background,
+            boxShadow: gridTheme.roundedInputTheme.boxShadow || '0 1px 4px rgba(0,0,0,0.06)'
+          }}
+          itemStyle={{ borderRadius: gridTheme.roundedInputTheme.borderRadius }}
+        />
+      </div> */}
+      <div style={{ minWidth: totalGridMinWidth, margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
         {/* Set maxHeight to show 10 rows (10 * 40px = 400px) */}
-        <div style={{ ...gridTheme.scrollContainer, maxHeight: 400, overflowY: 'auto' }}>
-          <table style={gridTheme.table}>
+        <div style={{ ...gridTheme.scrollContainer, maxHeight: 400, overflowY: 'auto', overflowX: 'hidden', display: 'flex', justifyContent: 'center' }}>
+          <table style={{ ...gridTheme.table, minWidth: totalGridMinWidth, width: 'min-content', margin: '0 auto' }}>
             <thead>
               <tr>
                 <th style={gridTheme.th}>Bank Name</th>
@@ -166,29 +220,63 @@ function BalancesPage() {
               <tr>
                 <td style={gridTheme.td}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="text" value={newRow.bankName || ''} onChange={e => setNewRow({ ...newRow, bankName: e.target.value })} placeholder="Bank Name" style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', flex: 1 }} disabled={editRowId !== null} />
-                    <select value={newRow.currency || ''} onChange={e => setNewRow({ ...newRow, currency: e.target.value })} style={{ border: '1px solid #1976d2', borderRadius: 8, padding: '4px 8px', fontSize: 18, background: '#f9fbfd', minHeight: 28, width: 120, marginLeft: 8 }} disabled={editRowId !== null}>
-                      <option value="">Currency</option>
-                      {currencyOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                    <RoundedInput
+                      value={newRow.bankName || ''}
+                      onChange={e => setNewRow({ ...newRow, bankName: e.target.value })}
+                      placeholder="Bank Name"
+                      disabled={editRowId !== null}
+                      style={{ minWidth: maxBankNameWidth, maxWidth: maxBankNameWidth }}
+                    />
+                    <RoundedDropdown
+                      value={newRow.currency || ''}
+                      onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
+                      options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
+                      disabled={editRowId !== null}
+                      style={{ minWidth: 110, maxWidth: 200, height: 40 }}
+                    />
                   </div>
                 </td>
                 <td style={gridTheme.td}>
-                  <input type="number" value={newRow.requiredAmount || ''} onChange={e => setNewRow({ ...newRow, requiredAmount: e.target.value })} placeholder="Required" style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} disabled={editRowId !== null} />
+                  <RoundedInput
+                    type="number"
+                    value={newRow.requiredAmount || ''}
+                    onChange={e => setNewRow({ ...newRow, requiredAmount: e.target.value })}
+                    placeholder="Required"
+                    disabled={editRowId !== null}
+                    style={{ minWidth: maxRequiredWidth, maxWidth: maxRequiredWidth, width: 'auto' }}
+                  />
                   {newRow.currency ? <span style={{ marginLeft: 4 }}>{newRow.currency}</span> : null}
                 </td>
                 <td style={gridTheme.td}>
-                  <input type="number" value={newRow.inProgressAmount || ''} onChange={e => setNewRow({ ...newRow, inProgressAmount: e.target.value })} placeholder="In Progress" style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} disabled={editRowId !== null} />
+                  <RoundedInput
+                    type="number"
+                    value={newRow.inProgressAmount || ''}
+                    onChange={e => setNewRow({ ...newRow, inProgressAmount: e.target.value })}
+                    placeholder="In Progress"
+                    disabled={editRowId !== null}
+                    style={{ minWidth: maxInProgressWidth, maxWidth: maxInProgressWidth, width: 'auto' }}
+                  />
                   {newRow.currency ? <span style={{ marginLeft: 4 }}>{newRow.currency}</span> : null}
                 </td>
                 <td style={gridTheme.td}>
-                  <input type="number" value={newRow.balanceAmount || ''} onChange={e => setNewRow({ ...newRow, balanceAmount: e.target.value })} placeholder="Balance" style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} disabled={editRowId !== null} />
+                  <RoundedInput
+                    type="number"
+                    value={newRow.balanceAmount || ''}
+                    onChange={e => setNewRow({ ...newRow, balanceAmount: e.target.value })}
+                    placeholder="Balance"
+                    disabled={editRowId !== null}
+                    style={{ minWidth: maxBalanceWidth, maxWidth: maxBalanceWidth, width: 'auto' }}
+                  />
                   {newRow.currency ? <span style={{ marginLeft: 4 }}>{newRow.currency}</span> : null}
                 </td>
                 <td style={gridTheme.td}>
-                  <input type="text" value={newRow.remarks || ''} onChange={e => setNewRow({ ...newRow, remarks: e.target.value })} placeholder="Remarks" style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} disabled={editRowId !== null} />
+                  <RoundedInput
+                    value={newRow.remarks || ''}
+                    onChange={e => setNewRow({ ...newRow, remarks: e.target.value })}
+                    placeholder="Remarks"
+                    disabled={editRowId !== null}
+                    style={{ minWidth: maxRemarksWidth, maxWidth: maxRemarksWidth }}
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -211,23 +299,47 @@ function BalancesPage() {
                 <tr key={balance.id}>
                   <td style={gridTheme.td}>
                     {editRowId === balance.id ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <input type="text" value={editRowData.bankName || ''} onChange={e => handleRowChange(e, 'bankName')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', flex: 1 }} />
-                        <select value={editRowData.currency || ''} onChange={e => handleRowChange(e, 'currency')} style={{ border: '1px solid #1976d2', borderRadius: 8, padding: '4px 8px', fontSize: 18, background: '#f9fbfd', minHeight: 28, width: 120, marginLeft: 8 }}>
-                          <option value="">Currency</option>
-                          {currencyOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          maxWidth: maxBankNameWidth,
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <RoundedInput
+                          value={editRowData.bankName || ''}
+                          onChange={e => handleRowChange(e, 'bankName')}
+                          style={{
+                            border: '1px solid #1976d2',
+                            flex: 1,
+                            minWidth: maxBankNameWidth,
+                            maxWidth: maxBankNameWidth,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        />
+                        <RoundedDropdown
+                          value={editRowData.currency || ''}
+                          onChange={e => handleRowChange(e, 'currency')}
+                          options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
+                          style={{ minWidth: 110, maxWidth: 120, height: 40, border: '1px solid #1976d2' }}
+                        />
                       </div>
                     ) : (
-                      <span style={{ flex: 1 }}>{balance.bankName}</span>
+                      <span style={{ flex: 1, maxWidth: maxBankNameWidth, overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', whiteSpace: 'nowrap' }}>{balance.bankName}</span>
                     )}
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === balance.id ? (
                       <>
-                        <input type="number" value={editRowData.requiredAmount || ''} onChange={e => handleRowChange(e, 'requiredAmount')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} />
+                        <RoundedInput
+                          type="number"
+                          value={editRowData.requiredAmount || ''}
+                          onChange={e => handleRowChange(e, 'requiredAmount')}
+                          style={{ border: '1px solid #1976d2', minWidth: maxRequiredWidth, maxWidth: maxRequiredWidth, width: 'auto' }}
+                        />
                         {editRowData.currency ? <span style={{ marginLeft: 4 }}>{editRowData.currency}</span> : null}
                       </>
                     ) : (
@@ -239,7 +351,12 @@ function BalancesPage() {
                   <td style={gridTheme.td}>
                     {editRowId === balance.id ? (
                       <>
-                        <input type="number" value={editRowData.inProgressAmount || ''} onChange={e => handleRowChange(e, 'inProgressAmount')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} />
+                        <RoundedInput
+                          type="number"
+                          value={editRowData.inProgressAmount || ''}
+                          onChange={e => handleRowChange(e, 'inProgressAmount')}
+                          style={{ border: '1px solid #1976d2', minWidth: maxInProgressWidth, maxWidth: maxInProgressWidth, width: 'auto' }}
+                        />
                         {editRowData.currency ? <span style={{ marginLeft: 4 }}>{editRowData.currency}</span> : null}
                       </>
                     ) : (
@@ -251,7 +368,12 @@ function BalancesPage() {
                   <td style={gridTheme.td}>
                     {editRowId === balance.id ? (
                       <>
-                        <input type="number" value={editRowData.balanceAmount || ''} onChange={e => handleRowChange(e, 'balanceAmount')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} />
+                        <RoundedInput
+                          type="number"
+                          value={editRowData.balanceAmount || ''}
+                          onChange={e => handleRowChange(e, 'balanceAmount')}
+                          style={{ border: '1px solid #1976d2', minWidth: maxBalanceWidth, maxWidth: maxBalanceWidth, width: 'auto' }}
+                        />
                         {editRowData.currency ? <span style={{ marginLeft: 4 }}>{editRowData.currency}</span> : null}
                       </>
                     ) : (
@@ -262,9 +384,17 @@ function BalancesPage() {
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === balance.id ? (
-                      <input type="text" value={editRowData.remarks || ''} onChange={e => handleRowChange(e, 'remarks')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }} />
+                      <RoundedInput
+                        value={editRowData.remarks || ''}
+                        onChange={e => handleRowChange(e, 'remarks')}
+                        style={{
+                          border: '1px solid #1976d2',
+                          minWidth: maxRemarksWidth,
+                          maxWidth: maxRemarksWidth
+                        }}
+                      />
                     ) : (
-                      balance.remarks
+                      <span>{balance.remarks}</span>
                     )}
                   </td>
                   <td style={gridTheme.td}>

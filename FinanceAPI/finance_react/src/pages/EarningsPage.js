@@ -5,6 +5,8 @@ import { ActionButton } from '../components/ActionButton';
 import GridBanner from '../components/GridBanner';
 import { gridTheme, currencyOptions } from '../components/gridTheme';
 import RoundedInput from '../components/RoundedInput';
+import RoundedDropdown from '../components/RoundedDropdown';
+import RoundedComboBox from '../components/RoundedComboBox';
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/earnings';
 const USERS_API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/users';
@@ -156,6 +158,28 @@ export default function EarningsPage(props) {
   const userOptions = users.map(u => ({ value: u.id, label: u.shortName || `${u.firstName || ''} ${u.lastName || ''}`.trim() }));
   const getUserLabel = (id) => userOptions.find(u => u.value === id)?.label || id || '';
 
+  // Calculate max width for Sender/Receiver/Owner columns based on all values in the grid
+  const allSenderLabels = [newRow.sender, ...filteredEarnings.map(e => e.sender), editRowData.sender]
+    .map(id => getUserLabel(id || ''));
+  const allReceiverLabels = [newRow.receiver, ...filteredEarnings.map(e => e.receiver), editRowData.receiver]
+    .map(id => getUserLabel(id || ''));
+  const allOwnerLabels = [newRow.ownerId, ...filteredEarnings.map(e => e.ownerId), editRowData.ownerId]
+    .map(id => getUserLabel(id || ''));
+  function getTextWidth(text, font = '16px Arial') {
+    if (typeof document === 'undefined') return 200;
+    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
+    const context = canvas.getContext('2d');
+    context.font = font;
+    return context.measureText(text).width;
+  }
+  const senderMaxWidth = Math.max(140, ...allSenderLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
+  const receiverMaxWidth = Math.max(140, ...allReceiverLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
+  const ownerMaxWidth = Math.max(140, ...allOwnerLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
+
+  // Unique type options for the Type combo box
+  const typeOptions = Array.from(new Set(earnings.map(e => e.type).filter(Boolean))).map(t => ({ value: t, label: t }));
+  const typeComboOptions = [{ value: '', label: 'Select' }, ...typeOptions];
+
   return (
     <div style={{ padding: 20, paddingTop: 0 }}>
       <GridBanner
@@ -181,7 +205,7 @@ export default function EarningsPage(props) {
                 <th style={gridTheme.th}>Sender</th>
                 <th style={gridTheme.th}>Receiver</th>
                 <th style={gridTheme.th}>Item</th>
-                <th style={gridTheme.th} colSpan={2}>Amount / Qty & Unit</th>
+                <th style={gridTheme.th} colSpan={2}>Volume&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unit</th>
                 <th style={gridTheme.th}>End Date</th>
                 <th style={gridTheme.th}>Owner</th>
                 <th style={gridTheme.th}>Last Updated</th>
@@ -193,51 +217,70 @@ export default function EarningsPage(props) {
               {/* Add row for new earning */}
               <tr>
                 <td style={gridTheme.td}>
-                  <RoundedInput value={newRow.type || ''} onChange={e => setNewRow({ ...newRow, type: e.target.value })} placeholder="Type" disabled={editRowId !== null} />
+                  <RoundedComboBox
+                    value={newRow.type || ''}
+                    onChange={e => setNewRow({ ...newRow, type: e.target.value })}
+                    options={typeComboOptions}
+                    placeholder="Type"
+                    disabled={editRowId !== null}
+                  />
                 </td>
                 <td style={gridTheme.td}>
-                  <select value={newRow.frequency || ''} onChange={e => setNewRow({ ...newRow, frequency: e.target.value })} style={gridTheme.roundedSelectTheme} disabled={editRowId !== null}>
-                    <option value="">Select</option>
-                    {frequencyOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+                  <RoundedComboBox
+                    value={newRow.frequency || ''}
+                    onChange={e => setNewRow({ ...newRow, frequency: e.target.value })}
+                    options={[{ value: '', label: 'Select' }, ...frequencyOptions.map(opt => ({ value: opt, label: opt }))]}
+                    placeholder="Frequency"
+                    disabled={editRowId !== null}
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <RoundedInput type="date" value={newRow.startDate || ''} onChange={e => setNewRow({ ...newRow, startDate: e.target.value })} placeholder="Start Date" disabled={editRowId !== null} />
                 </td>
                 <td style={gridTheme.td}>
-                  <select value={newRow.sender || ''} onChange={e => setNewRow({ ...newRow, sender: e.target.value })} style={gridTheme.roundedSelectTheme} disabled={editRowId !== null}>
-                    <option value="">Select</option>
-                    {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  <RoundedDropdown
+                    value={newRow.sender || ''}
+                    onChange={e => setNewRow({ ...newRow, sender: e.target.value })}
+                    options={[{ value: '', label: 'Select' }, ...userOptions]}
+                    disabled={editRowId !== null}
+                    style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
+                  />
                 </td>
                 <td style={gridTheme.td}>
-                  <select value={newRow.receiver || ''} onChange={e => setNewRow({ ...newRow, receiver: e.target.value })} style={gridTheme.roundedSelectTheme} disabled={editRowId !== null}>
-                    <option value="">Select</option>
-                    {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  <RoundedDropdown
+                    value={newRow.receiver || ''}
+                    onChange={e => setNewRow({ ...newRow, receiver: e.target.value })}
+                    options={[{ value: '', label: 'Select' }, ...userOptions]}
+                    disabled={editRowId !== null}
+                    style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <RoundedInput value={newRow.item || ''} onChange={e => setNewRow({ ...newRow, item: e.target.value })} placeholder="Item" disabled={editRowId !== null} />
                 </td>
                 <td style={gridTheme.td} colSpan={2}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <RoundedInput value={newRow.amount || ''} onChange={e => setNewRow({ ...newRow, amount: e.target.value })} placeholder="Amount / Qty" style={{ width: '60%' }} disabled={editRowId !== null} />
-                    <select value={newRow.currency || ''} onChange={e => setNewRow({ ...newRow, currency: e.target.value })} placeholder="Unit" style={{ ...gridTheme.roundedSelectTheme, width: '40%' }} disabled={editRowId !== null}>
-                      <option value="">Select</option>
-                      {currencyOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                    <RoundedInput value={newRow.amount || ''} onChange={e => setNewRow({ ...newRow, amount: e.target.value })} placeholder="Amount" style={{ width: '60%' }} disabled={editRowId !== null} />
+                    <RoundedDropdown
+                      value={newRow.currency || ''}
+                      onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
+                      options={[{ value: '', label: 'Select' }, ...currencyOptions]}
+                      placeholder="Unit"
+                      disabled={editRowId !== null}
+                    />
                   </div>
                 </td>
                 <td style={gridTheme.td}>
                   <RoundedInput type="date" value={newRow.endDate || ''} onChange={e => setNewRow({ ...newRow, endDate: e.target.value })} placeholder="End Date" disabled={editRowId !== null} />
                 </td>
                 <td style={gridTheme.td}>
-                  <select value={newRow.ownerId || ''} onChange={e => setNewRow({ ...newRow, ownerId: e.target.value })} style={gridTheme.roundedSelectTheme} disabled={editRowId !== null}>
-                    <option value="">Select</option>
-                    {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  <RoundedDropdown
+                    value={newRow.ownerId || ''}
+                    onChange={e => setNewRow({ ...newRow, ownerId: e.target.value })}
+                    options={[{ value: '', label: 'Select' }, ...userOptions]}
+                    disabled={editRowId !== null}
+                    style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <RoundedInput type="date" value={newRow.lastUpdatedDate || ''} onChange={e => setNewRow({ ...newRow, lastUpdatedDate: e.target.value })} placeholder="Last Updated" disabled={editRowId !== null} />
@@ -266,17 +309,25 @@ export default function EarningsPage(props) {
                 <tr key={earning.id}>
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <RoundedInput value={editRowData.type || ''} onChange={e => handleRowChange(e, 'type')} placeholder="Type" style={{ border: '1px solid #1976d2' }} />
+                      <RoundedComboBox
+                        value={editRowData.type || ''}
+                        onChange={e => handleRowChange(e, 'type')}
+                        options={typeComboOptions}
+                        placeholder="Type"
+                        style={{ border: '1px solid #1976d2' }}
+                      />
                     ) : (
                       earning.type
                     )}
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <select value={editRowData.frequency || ''} onChange={e => handleRowChange(e, 'frequency')} style={{ ...gridTheme.roundedSelectTheme, border: '1px solid #1976d2' }}>
-                        <option value="">Select</option>
-                        {frequencyOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
+                      <RoundedDropdown
+                        value={editRowData.frequency || ''}
+                        onChange={e => handleRowChange(e, 'frequency')}
+                        options={[{ value: '', label: 'Select' }, ...frequencyOptions.map(opt => ({ value: opt, label: opt }))]}
+                        style={{ border: '1px solid #1976d2' }}
+                      />
                     ) : (
                       earning.frequency
                     )}
@@ -290,20 +341,24 @@ export default function EarningsPage(props) {
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <select value={editRowData.sender || ''} onChange={e => handleRowChange(e, 'sender')} style={{ ...gridTheme.roundedSelectTheme, border: '1px solid #1976d2' }}>
-                        <option value="">Select</option>
-                        {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
+                      <RoundedComboBox
+                        value={editRowData.sender || ''}
+                        onChange={e => handleRowChange(e, 'sender')}
+                        options={[{ value: '', label: 'Select' }, ...userOptions]}
+                        style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                      />
                     ) : (
                       getUserLabel(earning.sender)
                     )}
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <select value={editRowData.receiver || ''} onChange={e => handleRowChange(e, 'receiver')} style={{ ...gridTheme.roundedSelectTheme, border: '1px solid #1976d2' }}>
-                        <option value="">Select</option>
-                        {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
+                      <RoundedComboBox
+                        value={editRowData.receiver || ''}
+                        onChange={e => handleRowChange(e, 'receiver')}
+                        options={[{ value: '', label: 'Select' }, ...userOptions]}
+                        style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                      />
                     ) : (
                       getUserLabel(earning.receiver)
                     )}
@@ -319,12 +374,13 @@ export default function EarningsPage(props) {
                     {editRowId === earning.id ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <RoundedInput value={editRowData.amount || ''} onChange={e => handleRowChange(e, 'amount')} placeholder="Amount / Qty" style={{ border: '1px solid #1976d2', width: '60%' }} />
-                        <select value={editRowData.currency || ''} onChange={e => handleRowChange(e, 'currency')} style={{ ...gridTheme.roundedSelectTheme, border: '1px solid #1976d2', width: '40%' }} placeholder="Unit">
-                          <option value="">Select</option>
-                          {currencyOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
+                        <RoundedDropdown
+                          value={editRowData.currency || ''}
+                          onChange={e => handleRowChange(e, 'currency')}
+                          options={[{ value: '', label: 'Select' }, ...currencyOptions]}
+                          style={{ border: '1px solid #1976d2', width: '40%' }}
+                          placeholder="Unit"
+                        />
                       </div>
                     ) : (
                       <>{formatCurrencyValue(earning.amount, earning.currency)}{earning.currency ? ` ${earning.currency}` : ''}</>
@@ -339,10 +395,12 @@ export default function EarningsPage(props) {
                   </td>
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <select value={editRowData.ownerId || ''} onChange={e => handleRowChange(e, 'ownerId')} style={{ ...gridTheme.roundedSelectTheme, border: '1px solid #1976d2' }}>
-                        <option value="">Select</option>
-                        {userOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
+                      <RoundedComboBox
+                        value={editRowData.ownerId || ''}
+                        onChange={e => handleRowChange(e, 'ownerId')}
+                        options={[{ value: '', label: 'Select' }, ...userOptions]}
+                        style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                      />
                     ) : (
                       getUserLabel(earning.ownerId)
                     )}

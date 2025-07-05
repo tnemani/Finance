@@ -5,6 +5,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import GridBanner from '../components/GridBanner';
 import paymentIcon from '../components/icons/settings_banner.png';
 import { gridTheme } from '../components/gridTheme';
+import RoundedDropdown from '../components/RoundedDropdown';
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/settings';
 
@@ -164,16 +165,14 @@ function SettingsPage() {
                   <input type="text" value={newRow.value || ''} onChange={e => setNewRow({ ...newRow, value: e.target.value })} placeholder="Value" style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} disabled={editRowId !== null} />
                 </td>
                 <td style={gridTheme.td}>
-                  <select
+                  <RoundedDropdown
                     value={newRow.units || ''}
                     onChange={e => setNewRow({ ...newRow, units: e.target.value })}
-                    style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }}
+                    options={unitOptionsList.map(opt => ({ value: opt, label: opt ? opt : 'Select' }))}
+                    placeholder="Units"
+                    style={{ width: '100%' }}
                     disabled={editRowId !== null}
-                  >
-                    {unitOptionsList.map(opt => (
-                      <option key={opt} value={opt}>{opt ? opt : 'Select'}</option>
-                    ))}
-                  </select>
+                  />
                 </td>
                 <td style={gridTheme.td}>
                   <input type="text" value={newRow.description || ''} onChange={e => setNewRow({ ...newRow, description: e.target.value })} placeholder="Description" style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} disabled={editRowId !== null} />
@@ -213,18 +212,13 @@ function SettingsPage() {
                   </td>
                   {editRowId === setting.id && (
                     <td style={gridTheme.td}>
-                      <input
-                        type="text"
+                      <RoundedDropdown
                         value={editRowData.units ?? ''}
                         onChange={e => handleRowChange(e, 'units')}
-                        list="unitOptionsList"
-                        style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }}
+                        options={unitOptionsList.map(opt => ({ value: opt, label: opt ? opt : 'Select' }))}
+                        placeholder="Units"
+                        style={{ width: '100%' }}
                       />
-                      <datalist id="unitOptionsList">
-                        {unitOptionsList.map(opt => (
-                          <option key={opt} value={opt}>{opt ? opt : 'Select'}</option>
-                        ))}
-                      </datalist>
                     </td>
                   )}
                   <td style={gridTheme.td}>

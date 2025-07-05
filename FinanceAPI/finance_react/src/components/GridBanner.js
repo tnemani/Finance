@@ -1,16 +1,28 @@
 import React from 'react';
 
+// Common GridBanner with full-width, left-aligned style
 export default function GridBanner({ icon, title, searchText, setSearchText, placeholder = 'Search...', children, style = {}, titleStyle = {}, iconStyle = {} }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8,
-      background: '#e3f0fc', borderRadius: 10,
-      boxShadow: '0 1px 4px rgba(25, 118, 210, 0.06)', padding: '0 24px 0 12px', minHeight: 44, position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      textAlign: 'left',
+      width: '100%',
+      maxWidth: '100%',
+      margin: 0,
+      padding: '0 40px 0 32px', // more right/left padding
+      boxSizing: 'border-box',
+      background: '#e3f0fc',
+      borderRadius: 10,
+      boxShadow: '0 1px 4px rgba(25, 118, 210, 0.06)',
+      minHeight: 44,
+      position: 'relative',
       ...style
     }}>
       <h2 style={{
         display: 'flex', alignItems: 'center',
-        textAlign: 'center', fontSize: 32, fontWeight: 800, marginBottom: 8, marginTop: 0, letterSpacing: 1, background: 'none', borderRadius: 8, padding: '10px 0', color: '#1976d2', boxShadow: 'none', flex: 1, zIndex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', justifyContent: 'center',
+        textAlign: 'left', fontSize: 32, fontWeight: 800, marginBottom: 8, marginTop: 0, letterSpacing: 1, background: 'none', borderRadius: 8, padding: '10px 0', color: '#1976d2', boxShadow: 'none', flex: 1, zIndex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', justifyContent: 'flex-start',
         ...titleStyle
       }}>
         {icon && <img src={icon} alt={title} style={{ height: 54, width: 54, marginRight: 18, verticalAlign: 'middle', display: 'inline-block', ...iconStyle }} />}

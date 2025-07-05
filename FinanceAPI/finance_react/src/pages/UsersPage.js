@@ -6,6 +6,7 @@ import paymentIcon from '../components/icons/users_banner.png';
 import saveIcon from '../components/icons/save.png';
 import GridBanner from '../components/GridBanner';
 import { gridTheme } from '../components/gridTheme';
+import RoundedInput from '../components/RoundedInput';
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/users';
 const ADDRESSES_API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/addresses';
@@ -433,46 +434,20 @@ function UsersPage() {
             {columnsWithShortName.map(col => (
               <td key={col} style={gridTheme.td}>
                 {col.toLowerCase() === 'dateofbirth' ? (
-                  <input
+                  <RoundedInput
                     type="date"
                     value={newRow[col] ? newRow[col].slice(0, 10) : ''}
                     onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                    style={{
-                      border: 'none',
-                      borderRadius: 0,
-                      padding: '4px 8px',
-                      outline: 'none',
-                      fontSize: '1em',
-                      background: 'transparent',
-                      minHeight: 28,
-                      margin: 0,
-                      boxSizing: 'border-box',
-                      width: '100%',
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                    }}
+                    style={{ width: '100%' }}
+                    disabled={editRowId !== null}
                   />
                 ) : (
-                  <input
+                  <RoundedInput
                     type="text"
                     value={newRow[col] || ''}
                     onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                    style={{
-                      border: 'none',
-                      borderRadius: 0,
-                      padding: '4px 8px',
-                      outline: 'none',
-                      fontSize: '1em',
-                      background: 'transparent',
-                      minHeight: 28,
-                      margin: 0,
-                      boxSizing: 'border-box',
-                      width: '100%',
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                    }}
+                    style={{ width: '100%' }}
+                    disabled={editRowId !== null}
                   />
                 )}
               </td>
@@ -546,7 +521,7 @@ function UsersPage() {
                               </td>
                               <td style={gridTheme.td}>
                                 {checked && (
-                                  <input
+                                  <RoundedInput
                                     type="date"
                                     value={link.startDate || ''}
                                     onChange={e => {
@@ -555,14 +530,15 @@ function UsersPage() {
                                       );
                                       setNewRow({ ...newRow, userAddresses: updated });
                                     }}
-                                    style={{ marginLeft: 8 }}
+                                    style={{ marginLeft: 8, width: '100%' }}
                                     placeholder="Start Date"
+                                    disabled={editRowId !== null}
                                   />
                                 )}
                               </td>
                               <td style={gridTheme.td}>
                                 {checked && (
-                                  <input
+                                  <RoundedInput
                                     type="date"
                                     value={link.endDate || ''}
                                     onChange={e => {
@@ -571,8 +547,9 @@ function UsersPage() {
                                       );
                                       setNewRow({ ...newRow, userAddresses: updated });
                                     }}
-                                    style={{ marginLeft: 8 }}
+                                    style={{ marginLeft: 8, width: '100%' }}
                                     placeholder="End Date"
+                                    disabled={editRowId !== null}
                                   />
                                 )}
                               </td>
@@ -596,98 +573,43 @@ function UsersPage() {
                       <tbody>
                         <tr style={gridTheme.tr}>
                           <td style={gridTheme.td}>
-                            <input
+                            <RoundedInput
                               type="date"
                               value={newRow.dateOfBirth ? newRow.dateOfBirth.slice(0, 10) : ''}
                               onChange={e => setNewRow({ ...newRow, dateOfBirth: e.target.value })}
-                              style={{
-                                border: '1px solid #1976d2',
-                                borderRadius: '8px',
-                                padding: '4px 8px',
-                                outline: 'none',
-                                fontSize: '1em',
-                                background: '#f9fbfd',
-                                minHeight: 28,
-                                margin: 0,
-                                boxSizing: 'border-box',
-                                width: '100%',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                          />
+                              style={{ width: '100%' }}
+                              disabled={editRowId !== null}
+                            />
                           </td>
                           <td style={gridTheme.td}>
-                            <input
+                            <RoundedInput
                               type="text"
                               value={newRow.ssn || ''}
                               onChange={e => setNewRow({ ...newRow, ssn: e.target.value })}
-                              style={{
-                                border: '1px solid #1976d2',
-                                borderRadius: '8px',
-                                padding: '4px 8px',
-                                outline: 'none',
-                                fontSize: '1em',
-                                background: '#f9fbfd',
-                                minHeight: 28,
-                                margin: 0,
-                                boxSizing: 'border-box',
-                                width: '100%',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
+                              style={{ width: '100%' }}
                               maxLength={16}
+                              disabled={editRowId !== null}
                             />
                           </td>
                           <td style={gridTheme.td}>
-                            <input
+                            <RoundedInput
                               type="text"
                               value={newRow.pan || ''}
                               onChange={e => setNewRow({ ...newRow, pan: e.target.value })}
-                              style={{
-                                border: '1px solid #1976d2',
-                                borderRadius: '8px',
-                                padding: '4px 8px',
-                                outline: 'none',
-                                fontSize: '1em',
-                                background: '#f9fbfd',
-                                minHeight: 28,
-                                margin: 0,
-                                boxSizing: 'border-box',
-                                width: '100%',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
+                              style={{ width: '100%' }}
                               maxLength={16}
+                              disabled={editRowId !== null}
                             />
                           </td>
                           <td style={gridTheme.td}>
-                            <input
+                            <RoundedInput
                               type="text"
                               value={newRow.notes || ''}
                               onChange={e => setNewRow({ ...newRow, notes: e.target.value })}
-                              style={{
-                                border: '1px solid #1976d2',
-                                borderRadius: '8px',
-                                padding: '4px 8px',
-                                outline: 'none',
-                                fontSize: '1em',
-                                background: '#f9fbfd',
-                                minHeight: 28,
-                                margin: 0,
-                                boxSizing: 'border-box',
-                                width: '100%',
-                                whiteSpace: 'pre',
-                                overflowX: 'auto',
-                                fontFamily: 'inherit',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              placeholder="No notes"
+                              style={{ width: '100%' }}
                               maxLength={256}
+                              placeholder="No notes"
+                              disabled={editRowId !== null}
                             />
                           </td>
                         </tr>
@@ -714,49 +636,19 @@ function UsersPage() {
                   <td key={col} style={gridTheme.td}>
                     {editRowId === user.id ? (
                       col.toLowerCase() === 'dateofbirth' ? (
-                        <input
+                        <RoundedInput
                           type="date"
                           value={editRowData[col] ? editRowData[col].slice(0, 10) : ''}
                           onChange={e => handleRowChange({ target: { value: e.target.value } }, col)}
-                          style={{
-                            border: '1px solid #1976d2',
-                            borderRadius: '8px',
-                            padding: '4px 8px',
-                            outline: 'none',
-                            fontSize: '1em',
-                            boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)',
-                            transition: 'border 0.2s',
-                            width: '100%',
-                            background: '#f9fbfd',
-                            minHeight: 28,
-                            margin: 0,
-                            boxSizing: 'border-box',
-                            appearance: 'none',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                          }}
+                          style={{ border: '1px solid #1976d2', width: '100%' }}
+                          disabled={false}
                         />
                       ) : (
-                        <input
+                        <RoundedInput
                           value={editRowData[col] ?? ''}
                           onChange={e => handleRowChange(e, col)}
-                          style={{
-                            border: '1px solid #1976d2',
-                            borderRadius: '8px',
-                            padding: '4px 8px',
-                            outline: 'none',
-                            fontSize: '1em',
-                            boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)',
-                            transition: 'border 0.2s',
-                            width: '100%',
-                            background: '#f9fbfd',
-                            minHeight: 28,
-                            margin: 0,
-                            boxSizing: 'border-box',
-                            appearance: 'none',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                          }}
+                          style={{ border: '1px solid #1976d2', width: '100%' }}
+                          disabled={false}
                         />
                       )
                     ) : (
@@ -847,7 +739,7 @@ function UsersPage() {
                                 </td>
                                 <td style={gridTheme.td}>
                                   {checked && (
-                                    <input
+                                    <RoundedInput
                                       type="date"
                                       value={link.startDate || ''}
                                       onChange={e => {
@@ -857,12 +749,14 @@ function UsersPage() {
                                         setEditRowData({ ...editRowData, userAddresses: updated });
                                       }}
                                       style={{ width: '100%' }}
+                                      placeholder="Start Date"
+                                      disabled={false}
                                     />
                                   )}
                                 </td>
                                 <td style={gridTheme.td}>
                                   {checked && (
-                                    <input
+                                    <RoundedInput
                                       type="date"
                                       value={link.endDate || ''}
                                       onChange={e => {
@@ -872,6 +766,8 @@ function UsersPage() {
                                         setEditRowData({ ...editRowData, userAddresses: updated });
                                       }}
                                       style={{ width: '100%' }}
+                                      placeholder="End Date"
+                                      disabled={false}
                                     />
                                   )}
                                 </td>
@@ -894,96 +790,43 @@ function UsersPage() {
                           <tbody>
                             <tr style={gridTheme.tr}>
                               <td style={gridTheme.td}>
-                                <input
+                                <RoundedInput
                                   type="date"
                                   value={editRowData.dateOfBirth ? editRowData.dateOfBirth.slice(0, 10) : ''}
                                   onChange={e => setEditRowData({ ...editRowData, dateOfBirth: e.target.value })}
-                                  style={{
-                                    border: '1px solid #1976d2',
-                                    borderRadius: '8px',
-                                    padding: '4px 8px',
-                                    outline: 'none',
-                                    fontSize: '1em',
-                                    background: '#f9fbfd',
-                                    minHeight: 28,
-                                    margin: 0,
-                                    boxSizing: 'border-box',
-                                    width: '100%',
-                                    appearance: 'none',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'none',
-                                  }}
+                                  style={{ border: '1px solid #1976d2', width: '100%' }}
+                                  disabled={false}
                                 />
                               </td>
                               <td style={gridTheme.td}>
-                                <input
+                                <RoundedInput
                                   type="text"
                                   value={editRowData.ssn || ''}
                                   onChange={e => setEditRowData({ ...editRowData, ssn: e.target.value })}
-                                  style={{
-                                    border: '1px solid #1976d2',
-                                    borderRadius: '8px',
-                                    padding: '4px 8px',
-                                    outline: 'none',
-                                    fontSize: '1em',
-                                    background: '#f9fbfd',
-                                    minHeight: 28,
-                                    margin: 0,
-                                    boxSizing: 'border-box',
-                                    width: '100%',
-                                    appearance: 'none',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'none',
-                                  }}
+                                  style={{ border: '1px solid #1976d2', width: '100%' }}
                                   maxLength={16}
+                                  disabled={false}
                                 />
                               </td>
                               <td style={gridTheme.td}>
-                                <input
+                                <RoundedInput
                                   type="text"
                                   value={editRowData.pan || ''}
                                   onChange={e => setEditRowData({ ...editRowData, pan: e.target.value })}
-                                  style={{
-                                    border: '1px solid #1976d2',
-                                    borderRadius: '8px',
-                                    padding: '4px 8px',
-                                    outline: 'none',
-                                    fontSize: '1em',
-                                    background: '#f9fbfd',
-                                    minHeight: 28,
-                                    margin: 0,
-                                    boxSizing: 'border-box',
-                                    width: '100%',
-                                    appearance: 'none',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'none',
-                                  }}
+                                  style={{ border: '1px solid #1976d2', width: '100%' }}
                                   maxLength={16}
+                                  disabled={false}
                                 />
                               </td>
                               <td style={gridTheme.td}>
-                                <input
+                                <RoundedInput
                                   type="text"
                                   value={editRowData.notes || ''}
                                   onChange={e => setEditRowData({ ...editRowData, notes: e.target.value })}
-                                  style={{
-                                    border: '1px solid #1976d2',
-                                    borderRadius: '8px',
-                                    padding: '4px 8px',
-                                    outline: 'none',
-                                    fontSize: '1em',
-                                    background: '#f9fbfd',
-                                    minHeight: 28,
-                                    margin: 0,
-                                    boxSizing: 'border-box',
-                                    width: '100%',
-                                    whiteSpace: 'pre',
-                                    overflowX: 'auto',
-                                    fontFamily: 'inherit',
-                                    appearance: 'none',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'none',
-                                  }}
+                                  style={{ border: '1px solid #1976d2', width: '100%' }}
+                                  maxLength={256}
+                                  placeholder="No notes"
+                                  disabled={false}
                                 />
                               </td>
                             </tr>
@@ -1079,9 +922,6 @@ function UsersPage() {
         searchText={searchText}
         setSearchText={setSearchText}
         placeholder="Search users..."
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', textAlign: 'left', width: '100%' }}
-        titleStyle={{ fontSize: 28, fontWeight: 600, marginLeft: 12, textAlign: 'left', display: 'inline-block' }}
-        iconStyle={{ height: 40, display: 'inline-block' }}
       />
       <div style={{ height: 12 }} />
       <div style={{ width: 'fit-content', minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>

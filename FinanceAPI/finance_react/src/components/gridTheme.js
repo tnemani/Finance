@@ -83,7 +83,7 @@ export const gridTheme = {
     margin: 0,
   },
   editableDropdownTheme: {
-    border: '1.5px solid #1976d2',
+    border: '1.5px solidrgb(210, 25, 71)',
     borderRadius: 8,
     padding: '4px 8px',
     fontSize: '1em',

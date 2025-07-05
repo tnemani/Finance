@@ -156,7 +156,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
         modelBuilder.Entity<Investment>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Currency).IsFixedLength();
             entity.Property(e => e.Description).IsFixedLength();
             entity.Property(e => e.PolicyNo).IsFixedLength();

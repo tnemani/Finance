@@ -9,6 +9,7 @@ import plotIcon from '../components/icons/Plot (Site).png';
 import workIcon from '../components/icons/Work (Office).png';
 import GridBanner from '../components/GridBanner';
 import { gridTheme } from '../components/gridTheme';
+import RoundedInput from '../components/RoundedInput';
 
 const API_URL = 'http://localhost:5226/api/addresses';
 
@@ -278,12 +279,11 @@ function AddressesPage() {
                         disabled={editRowId !== null}
                       />
                     ) : (
-                      <input
+                      <RoundedInput
                         type={col.type}
                         value={newRow[col.key] || ''}
                         onChange={e => setNewRow({ ...newRow, [col.key]: e.target.value })}
                         placeholder={col.placeholder}
-                        style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%' }}
                         disabled={editRowId !== null}
                       />
                     )}
@@ -320,28 +320,12 @@ function AddressesPage() {
                             disabled={false}
                           />
                         ) : (
-                          <input
+                          <RoundedInput
                             type={col.type}
                             value={editRowData[col.key] ?? ''}
                             onChange={e => handleRowChange(e, col.key)}
                             placeholder={col.placeholder}
-                            style={{
-                              border: '1px solid #1976d2',
-                              borderRadius: '8px',
-                              padding: '4px 8px',
-                              outline: 'none',
-                              fontSize: '1em',
-                              boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)',
-                              transition: 'border 0.2s',
-                              width: '100%',
-                              background: '#f9fbfd',
-                              minHeight: 28,
-                              margin: 0,
-                              boxSizing: 'border-box',
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                            }}
+                            style={{ border: '1px solid #1976d2' }}
                           />
                         )
                       ) : (

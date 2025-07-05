@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FinanceAPI.Models;
 using FinanceAPI.Data;
+using FinanceAPI.Constants;
 
 namespace FinanceAPI.Controllers
 {
@@ -19,23 +20,48 @@ namespace FinanceAPI.Controllers
         public async Task<IActionResult> GetPolicies()
         {
             var policies = await _context.Investments
-                .Where(i => i.Type != "Stock" && i.Type != "MutualFunds" && i.Type != "GET")
+                .Where(i => i.Type == InvestmentTypes.Policy)
                 .Include(i => i.User)
                 .Select(i => new {
                     i.Id,
                     i.UserId,
-                    UserShortName = i.User != null ? i.User.ShortName : null,
-                    i.Type,
-                    i.Qty,
-                    i.Symbol,
-                    i.Currency,
-                    i.StartDate,
-                    i.PolicyNo,
-                    i.Financialnstitution,
-                    i.Description
+                    UserShortName = i.User != null && i.User.ShortName != null ? i.User.ShortName.Trim() : null,
+                    Type = i.Type != null ? i.Type.Trim() : null,
+                    Qty = i.Qty,
+                    Symbol = i.Symbol != null ? i.Symbol.Trim() : null,
+                    Currency = i.Currency != null ? i.Currency.Trim() : null,
+                    StartDate = i.StartDate,
+                    PolicyNo = i.PolicyNo != null ? i.PolicyNo.Trim() : null,
+                    Financialnstitution = i.Financialnstitution != null ? i.Financialnstitution.Trim() : null,
+                    Description = i.Description != null ? i.Description.Trim() : null
                 })
                 .ToListAsync();
             return Ok(policies);
+        }
+
+        // GET: api/Policy/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPolicy(int id)
+        {
+            var policy = await _context.Investments
+                .Where(i => i.Id == id && i.Type == InvestmentTypes.Policy)
+                .Include(i => i.User)
+                .Select(i => new {
+                    i.Id,
+                    i.UserId,
+                    UserShortName = i.User != null && i.User.ShortName != null ? i.User.ShortName.Trim() : null,
+                    Type = i.Type != null ? i.Type.Trim() : null,
+                    Qty = i.Qty,
+                    Symbol = i.Symbol != null ? i.Symbol.Trim() : null,
+                    Currency = i.Currency != null ? i.Currency.Trim() : null,
+                    StartDate = i.StartDate,
+                    PolicyNo = i.PolicyNo != null ? i.PolicyNo.Trim() : null,
+                    Financialnstitution = i.Financialnstitution != null ? i.Financialnstitution.Trim() : null,
+                    Description = i.Description != null ? i.Description.Trim() : null
+                })
+                .FirstOrDefaultAsync();
+            if (policy == null) return NotFound();
+            return Ok(policy);
         }
 
         // POST: api/Policy

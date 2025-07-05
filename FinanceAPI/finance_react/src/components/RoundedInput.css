@@ -1,0 +1,30 @@
+.roundedInput {
+  border-radius: 20px;
+  border: 1px solid #1976d2;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06);
+  padding: 0 12px;
+  font-size: 16px;
+  outline: none;
+  height: 35px;
+  line-height: 35px;
+  box-sizing: border-box;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.roundedInput:disabled {
+  background: #f0f0f0;
+  color: #aaa;
+}
+.roundedInput[type='number'] {
+  /* Remove spin buttons for Chrome, Safari, Edge */
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  line-height: 35px;
+}
+.roundedInput[type='number']::-webkit-inner-spin-button,
+.roundedInput[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  display: none;
+}
