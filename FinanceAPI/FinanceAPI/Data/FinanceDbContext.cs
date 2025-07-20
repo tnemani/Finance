@@ -168,12 +168,11 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
         modelBuilder.Entity<Jewlery>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Description).IsFixedLength();
-            entity.Property(e => e.Name).IsFixedLength();
             entity.Property(e => e.Type).IsFixedLength();
-
-            entity.HasOne(d => d.PurchasedAt).WithMany(p => p.Jewleries).HasConstraintName("FK_Jewlery_Addresses");
+            entity.Property(e => e.Name).IsFixedLength();
+            entity.Property(e => e.WeightUnits).IsFixedLength();
+            entity.Property(e => e.Currency).IsFixedLength();
+            entity.Property(e => e.Description).IsFixedLength();
         });
 
         modelBuilder.Entity<Loan>(entity =>
@@ -225,6 +224,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 .IsFixedLength()
                 .UseCollation("Latin1_General_BIN2");
             entity.Property(e => e.FirstName).IsFixedLength();
+            entity.Property(e => e.Group).IsFixedLength();
             entity.Property(e => e.LandLine)
                 .IsFixedLength()
                 .UseCollation("Latin1_General_BIN2");

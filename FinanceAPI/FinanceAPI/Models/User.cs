@@ -61,6 +61,9 @@ public partial class User
     [StringLength(100)]
     public string? ShortName { get; set; } // Added
 
+    [StringLength(50)]
+    public string? Group { get; set; }
+
     [InverseProperty("User")]
     public virtual ICollection<AccountDetail> AccountDetails { get; set; } = new List<AccountDetail>();
 

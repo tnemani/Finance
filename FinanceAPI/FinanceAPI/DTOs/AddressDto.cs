@@ -14,4 +14,5 @@ public class AddressDto
     public string? Country { get; set; }
     public string? Zip { get; set; }
     public string? Description { get; set; }
+    public string? ShortName { get; set; }
 }

@@ -25,7 +25,8 @@ public class AddressesController : ControllerBase
                 State = a.State?.Trim(),
                 Country = a.Country?.Trim(),
                 Zip = a.Zip?.Trim(),
-                Description = a.Description?.Trim()
+                Description = a.Description?.Trim(),
+                ShortName = a.ShortName?.Trim()
             }).ToList();
         return addresses;
     }
@@ -46,7 +47,8 @@ public class AddressesController : ControllerBase
             State = a.State?.Trim(),
             Country = a.Country?.Trim(),
             Zip = a.Zip?.Trim(),
-            Description = a.Description?.Trim()
+            Description = a.Description?.Trim(),
+            ShortName = a.ShortName?.Trim()
         };
     }
 

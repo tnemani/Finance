@@ -40,7 +40,26 @@ using FinanceAPI.Data;
                                     SourceShortName = srcUser != null ? srcUser.ShortName : string.Empty,
                                     DestinationShortName = dstUser != null ? dstUser.ShortName : string.Empty
                                 }).ToListAsync();
-            return result;
+
+            // Trim string fields after fetching from database
+            var trimmedResult = result.Select(r => new
+            {
+                r.Id,
+                r.SourceUserId,
+                r.DestinationUserId,
+                r.StartDate,
+                Currency = r.Currency?.Trim(),
+                r.Amount,
+                Purpose = r.Purpose?.Trim(),
+                r.ScheduledEndDate,
+                r.ActualEndDate,
+                Status = r.Status?.Trim(),
+                Reason = r.Reason?.Trim(),
+                SourceShortName = r.SourceShortName?.Trim() ?? string.Empty,
+                DestinationShortName = r.DestinationShortName?.Trim() ?? string.Empty
+            }).ToList();
+
+            return trimmedResult;
         }
 
         [HttpGet("{id}")]
@@ -168,21 +187,21 @@ using FinanceAPI.Data;
             var users = await _context.Users.AsNoTracking().ToListAsync();
             var transactions = await _context.PersonTransactions.AsNoTracking().ToListAsync();
 
-            // Group by (Source, Destination, Currency)
+            // Group by (Source, Destination, Currency) with trimmed currency
             var grouped = transactions
-                .GroupBy(t => new { t.SourceUserId, t.DestinationUserId, t.Currency })
+                .GroupBy(t => new { t.SourceUserId, t.DestinationUserId, Currency = t.Currency?.Trim() })
                 .Select(g => new
                 {
                     SourceUserId = g.Key.SourceUserId,
                     DestinationUserId = g.Key.DestinationUserId,
-                    Currency = g.Key.Currency,
+                    Currency = g.Key.Currency?.Trim(),
                     TotalAmount = g.Sum(x => x.Amount),
                     Details = g.Select(x => new {
                         x.Id, // Include transaction Id
-                        x.Purpose,
+                        Purpose = x.Purpose?.Trim(),
                         x.Amount,
                         ScheduleDate = x.StartDate,
-                        x.Status
+                        Status = x.Status?.Trim()
                     }).ToList()
                 })
                 .ToList();
@@ -203,10 +222,10 @@ using FinanceAPI.Data;
                 {
                     netAmount -= reverse.TotalAmount;
                     details.AddRange(reverse.Details.Select(d => new {
-                        d.Purpose,
+                        Purpose = d.Purpose?.Trim(),
                         Amount = -d.Amount,
                         d.ScheduleDate,
-                        d.Status
+                        Status = d.Status?.Trim()
                     }));
                     visited.Add(reverseKey);
                 }
@@ -216,11 +235,11 @@ using FinanceAPI.Data;
                     merged.Add(new {
                         SourceUserId = item.SourceUserId,
                         DestinationUserId = item.DestinationUserId,
-                        Currency = item.Currency,
+                        Currency = item.Currency?.Trim(),
                         NetAmount = netAmount,
                         Details = details,
-                        SourceShortName = users.FirstOrDefault(u => u.Id == item.SourceUserId)?.ShortName ?? item.SourceUserId.ToString(),
-                        DestinationShortName = users.FirstOrDefault(u => u.Id == item.DestinationUserId)?.ShortName ?? item.DestinationUserId.ToString()
+                        SourceShortName = users.FirstOrDefault(u => u.Id == item.SourceUserId)?.ShortName?.Trim() ?? item.SourceUserId.ToString(),
+                        DestinationShortName = users.FirstOrDefault(u => u.Id == item.DestinationUserId)?.ShortName?.Trim() ?? item.DestinationUserId.ToString()
                     });
                 }
             }

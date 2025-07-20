@@ -19,6 +19,7 @@ public class UserDto
     public string? Pan { get; set; }
     public string? Notes { get; set; }
     public string? ShortName { get; set; } // Added
+    public string? Group { get; set; }
     public List<UserAddressWithAddressDto>? Addresses { get; set; }
     public List<UserAddressDto>? UserAddresses { get; set; }
 }

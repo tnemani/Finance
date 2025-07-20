@@ -40,6 +40,7 @@ public class UsersController : ControllerBase
                 Pan = u.Pan?.Trim(),
                 Notes = u.Notes?.Trim(),
                 ShortName = u.ShortName?.Trim(), // Added
+                Group = u.Group?.Trim(),
                 Addresses = u.UserAddresses?.Where(ua => ua.Address != null).Select(ua => new UserAddressWithAddressDto
                 {
                     Id = ua.Id,
@@ -96,6 +97,7 @@ public class UsersController : ControllerBase
             Pan = u.Pan?.Trim(),
             Notes = u.Notes?.Trim(),
             ShortName = u.ShortName?.Trim(), // Added
+            Group = u.Group?.Trim(),
             Addresses = u.UserAddresses?.Where(ua => ua.Address != null).Select(ua => new UserAddressWithAddressDto
             {
                 Id = ua.Id,
@@ -144,7 +146,8 @@ public class UsersController : ControllerBase
             Aadhar = dto.Aadhar?.Trim(),
             Pan = dto.Pan?.Trim(),
             Notes = dto.Notes?.Trim(),
-            ShortName = dto.ShortName?.Trim() // Added
+            ShortName = dto.ShortName?.Trim(), // Added
+            Group = dto.Group?.Trim()
         };
         _context.Users.Add(user);
         _context.SaveChanges();
@@ -189,6 +192,7 @@ public class UsersController : ControllerBase
         user.Pan = dto.Pan?.Trim();
         user.Notes = dto.Notes?.Trim();
         user.ShortName = dto.ShortName?.Trim(); // Added
+        user.Group = dto.Group?.Trim();
         // Update UserAddresses
         if (dto.UserAddresses != null)
         {

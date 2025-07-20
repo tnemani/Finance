@@ -38,7 +38,10 @@ public partial class Address
     [StringLength(100)]
     public string? Description { get; set; }
 
-    [InverseProperty("PurchasedAt")]
+    [StringLength(100)]
+    public string? ShortName { get; set; } // Add ShortName property
+
+    [InverseProperty("PurchasedFromNavigation")]
     public virtual ICollection<Jewlery> Jewleries { get; set; } = new List<Jewlery>();
 
     [InverseProperty("Address")]
