@@ -7,6 +7,7 @@ import SettingsPage from './pages/SettingsPage';
 import CashPage from './pages/CashPage';
 import RecurringIncomesPage from './pages/RecurringIncomesPage';
 import PolicyStockPage from './pages/PolicyStockPage';
+import TreasurePage from './pages/TreasurePage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/cash" element={<CashPage />} />
         <Route path="/recurring-incomes" element={<RecurringIncomesPage />} />
         <Route path="/policy-stocks" element={<PolicyStockPage />} />
+        <Route path="/treasure" element={<TreasurePage />} />
         <Route path="*" element={<Navigate to="/users" />} />
       </Routes>
     </Router>

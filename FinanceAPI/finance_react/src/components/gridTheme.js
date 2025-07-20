@@ -95,17 +95,3 @@ export const gridTheme = {
   },
 };
 
-// Central currency options for all grids
-export const currencyOptions = [
-  { value: '$', label: '$ (USD)' },
-  { value: 'Rs', label: '₹ (INR)' },
-  { value: '€', label: '€ (EUR)' },
-  { value: '£', label: '£ (GBP)' },
-  { value: '¥', label: '¥ (JPY)' },
-  { value: 'CAD', label: 'C$ (CAD)' },
-  { value: 'AUD', label: 'A$ (AUD)' },
-  { value: 'SGD', label: 'S$ (SGD)' },
-  { value: 'CNY', label: '¥ (CNY)' },
-  { value: 'Stock', label: 'Stock' },
-  // Add more as needed
-];

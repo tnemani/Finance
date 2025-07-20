@@ -3,13 +3,42 @@ import axios from 'axios';
 import ConfirmModal from '../components/ConfirmModal';
 import { ActionButton } from '../components/ActionButton';
 import GridBanner from '../components/GridBanner';
-import { gridTheme, currencyOptions } from '../components/gridTheme';
+import { gridTheme } from '../components/gridTheme';
+import { currencyOptions, getEarningsTypeOptions, getFrequencyTypeOptions } from '../constants/Fixedlist';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
-import RoundedComboBox from '../components/RoundedComboBox';
+import {formatCurrencyValue} from '../helpers/Helper';
+
+import {
+  createGenericHandlers,
+  createSearchFilter,
+  SPACING,
+  FLEX_ROW_CENTER,
+  ACTION_BUTTON_CONTAINER_STYLE,
+  createColumnFonts,
+  createAllRows
+} from '../constants/common';
+import '../constants/common.css';
+
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/earnings';
 const USERS_API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/users';
+
+// Column definitions for dynamic width calculation
+const EARNINGS_COLUMNS = [
+  { key: 'fullName', label: 'User', type: 'text' },
+  { key: 'sourceName', label: 'Source', type: 'text' },
+  { key: 'amount', label: 'Amount', type: 'number' },
+  { key: 'frequency', label: 'Frequency', type: 'dropdown' },
+  { key: 'description', label: 'Description', type: 'text' }
+];
+
+// Helper function to parse earning row data for API
+const parseEarningRow = (row) => ({
+  ...row,
+  amount: row.amount !== undefined && row.amount !== '' ? Number(row.amount) : null,
+  userId: row.userId !== undefined ? Number(row.userId) : null
+});
 
 export default function EarningsPage(props) {
   const [earnings, setEarnings] = useState([]);
@@ -19,35 +48,16 @@ export default function EarningsPage(props) {
   const [confirm, setConfirm] = useState({ open: false, message: '', onConfirm: null });
   const [searchText, setSearchText] = useState('');
   const [filteredEarnings, setFilteredEarnings] = useState([]);
-  const [frequencyOptions, setFrequencyOptions] = useState([
-    "Daily", "Weekly", "Bi-Weekly", "Semi Monthly", "Quarterly", "Yearly"
-  ]);
   const [users, setUsers] = useState([]);
 
-  useEffect(() => { fetchEarnings(); fetchFrequencyOptions(); fetchUsers(); }, []);
+  // Define column structure similar to DiamondPage
+  const colKeys = ['type', 'frequency', 'startDate', 'sender', 'receiver', 'item', 'amount', 'endDate', 'ownerId', 'lastUpdatedDate', 'description'];
+  const colHeaders = ['Type', 'Frequency', 'Start Date', 'Sender', 'Receiver', 'Item', 'Volume/Unit', 'End Date', 'Owner', 'Last Updated', 'Description'];
 
-  useEffect(() => {
-    if (!searchText) setFilteredEarnings(earnings);
-    else {
-      const lower = searchText.toLowerCase();
-      setFilteredEarnings(earnings.filter(e =>
-        Object.values(e).some(val => val && typeof val === 'string' && val.toLowerCase().includes(lower))
-      ));
-    }
-  }, [searchText, earnings]);
-
+  // Declare fetch functions first to avoid temporal dead zone
   const fetchEarnings = async () => {
     const res = await axios.get(API_URL);
     setEarnings(res.data);
-  };
-
-  const fetchFrequencyOptions = async () => {
-    try {
-      const res = await axios.get(API_URL + '/frequency-options');
-      setFrequencyOptions(res.data);
-    } catch {
-      // fallback to default
-    }
   };
 
   const fetchUsers = async () => {
@@ -56,6 +66,35 @@ export default function EarningsPage(props) {
       setUsers(res.data);
     } catch {}
   };
+
+  // Use common generic handlers
+  const {
+    handleRowSave,
+    handleRowCancel,
+    handleDelete,
+    handleAdd
+  } = createGenericHandlers({
+    apiUrl: API_URL,
+    editRowData,
+    setEditRowId,
+    setEditRowData,
+    newRow,
+    setNewRow,
+    fetchData: fetchEarnings,
+    parseRow: parseEarningRow,
+    modalConfig: {
+      update: 'Are you sure you want to update this earning?',
+      delete: 'Are you sure you want to delete this earning?',
+      add: 'Are you sure you want to add this earning?'
+    },
+    setConfirm
+  });
+
+  useEffect(() => { fetchEarnings(); fetchUsers(); }, []);
+
+  useEffect(() => {
+    setFilteredEarnings(createSearchFilter(earnings, searchText));
+  }, [searchText, earnings]);
 
   const handleRowEdit = (earning) => {
     setEditRowId(earning.id);
@@ -66,50 +105,7 @@ export default function EarningsPage(props) {
     setEditRowData({ ...editRowData, [col]: e.target.value });
   };
 
-  const handleRowSave = async (id) => {
-    setConfirm({
-      open: true,
-      message: 'Are you sure you want to update this earning?',
-      onConfirm: async () => {
-        setConfirm({ open: false });
-        await axios.put(`${API_URL}/${id}`, editRowData);
-        setEditRowId(null);
-        setEditRowData({});
-        fetchEarnings();
-      }
-    });
-  };
 
-  const handleRowCancel = () => {
-    setEditRowId(null);
-    setEditRowData({});
-  };
-
-  const handleDelete = async id => {
-    setConfirm({
-      open: true,
-      message: 'Are you sure you want to delete this earning?',
-      onConfirm: async () => {
-        setConfirm({ open: false });
-        await axios.delete(`${API_URL}/${id}`);
-        fetchEarnings();
-      }
-    });
-  };
-
-  const handleAdd = async () => {
-    if (!newRow || Object.values(newRow).every(v => !v)) return;
-    setConfirm({
-      open: true,
-      message: 'Are you sure you want to add this earning?',
-      onConfirm: async () => {
-        setConfirm({ open: false });
-        await axios.post(API_URL, newRow);
-        setNewRow({});
-        fetchEarnings();
-      }
-    });
-  };
 
   // Format amount in Indian style
   const formatValueIN = (value) => {
@@ -126,25 +122,10 @@ export default function EarningsPage(props) {
     return formatted + '.' + decPart;
   };
 
-  // Format value for display: USD (no cents, commas), INR (Indian format), else as is
-  const formatCurrencyValue = (value, currency) => {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    if (isNaN(num)) return value;
-    if (currency === '$') {
-      // US format, no cents
-      return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
-    }
-    if (currency === 'Rs') {
-      // Indian format, no decimals
-      const [intPart] = num.toFixed(0).split('.');
-      let lastThree = intPart.slice(-3);
-      let otherNumbers = intPart.slice(0, -3);
-      if (otherNumbers !== '') lastThree = ',' + lastThree;
-      return otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-    }
-    return num;
-  };
+  // Add common helper functions
+  const columnFonts = createColumnFonts(colKeys.length);
+  const allRows = createAllRows(newRow, filteredEarnings, editRowData);
+
 
   // Format date as 'Month Date, yyyy'
   const formatDisplayDate = (dateStr) => {
@@ -176,12 +157,14 @@ export default function EarningsPage(props) {
   const receiverMaxWidth = Math.max(140, ...allReceiverLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
   const ownerMaxWidth = Math.max(140, ...allOwnerLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
 
-  // Unique type options for the Type combo box
-  const typeOptions = Array.from(new Set(earnings.map(e => e.type).filter(Boolean))).map(t => ({ value: t, label: t }));
-  const typeComboOptions = [{ value: '', label: 'Select' }, ...typeOptions];
+  // Get frequency options from constants
+  const frequencyComboOptions = getFrequencyTypeOptions();
+  
+  // Get type options from constants
+  const typeComboOptions = getEarningsTypeOptions();
 
   return (
-    <div style={{ padding: 20, paddingTop: 0 }}>
+    <div className="page-container">
       <GridBanner
         icon={require('../components/icons/earnings_banner.png')}
         title="Earnings"
@@ -199,97 +182,139 @@ export default function EarningsPage(props) {
           <table style={gridTheme.table}>
             <thead>
               <tr>
-                <th style={gridTheme.th}>Type</th>
-                <th style={gridTheme.th}>Frequency</th>
-                <th style={gridTheme.th}>Start Date</th>
-                <th style={gridTheme.th}>Sender</th>
-                <th style={gridTheme.th}>Receiver</th>
-                <th style={gridTheme.th}>Item</th>
-                <th style={gridTheme.th} colSpan={2}>Volume&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unit</th>
-                <th style={gridTheme.th}>End Date</th>
-                <th style={gridTheme.th}>Owner</th>
-                <th style={gridTheme.th}>Last Updated</th>
-                <th style={gridTheme.th}>Description</th>
+                {colHeaders.map((header, i) => (
+                  <th key={header} style={gridTheme.th} colSpan={header === 'Volume/Unit' ? 2 : 1}>
+                    {header === 'Volume/Unit' ? 'Volume\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Unit' : header}
+                  </th>
+                ))}
                 <th style={gridTheme.th}></th>
               </tr>
             </thead>
             <tbody>
               {/* Add row for new earning */}
               <tr>
-                <td style={gridTheme.td}>
-                  <RoundedComboBox
-                    value={newRow.type || ''}
-                    onChange={e => setNewRow({ ...newRow, type: e.target.value })}
-                    options={typeComboOptions}
-                    placeholder="Type"
-                    disabled={editRowId !== null}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedComboBox
-                    value={newRow.frequency || ''}
-                    onChange={e => setNewRow({ ...newRow, frequency: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...frequencyOptions.map(opt => ({ value: opt, label: opt }))]}
-                    placeholder="Frequency"
-                    disabled={editRowId !== null}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedInput type="date" value={newRow.startDate || ''} onChange={e => setNewRow({ ...newRow, startDate: e.target.value })} placeholder="Start Date" disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.sender || ''}
-                    onChange={e => setNewRow({ ...newRow, sender: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...userOptions]}
-                    disabled={editRowId !== null}
-                    style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.receiver || ''}
-                    onChange={e => setNewRow({ ...newRow, receiver: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...userOptions]}
-                    disabled={editRowId !== null}
-                    style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedInput value={newRow.item || ''} onChange={e => setNewRow({ ...newRow, item: e.target.value })} placeholder="Item" disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td} colSpan={2}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <RoundedInput value={newRow.amount || ''} onChange={e => setNewRow({ ...newRow, amount: e.target.value })} placeholder="Amount" style={{ width: '60%' }} disabled={editRowId !== null} />
-                    <RoundedDropdown
-                      value={newRow.currency || ''}
-                      onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
-                      options={[{ value: '', label: 'Select' }, ...currencyOptions]}
-                      placeholder="Unit"
-                      disabled={editRowId !== null}
-                    />
-                  </div>
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedInput type="date" value={newRow.endDate || ''} onChange={e => setNewRow({ ...newRow, endDate: e.target.value })} placeholder="End Date" disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.ownerId || ''}
-                    onChange={e => setNewRow({ ...newRow, ownerId: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...userOptions]}
-                    disabled={editRowId !== null}
-                    style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedInput type="date" value={newRow.lastUpdatedDate || ''} onChange={e => setNewRow({ ...newRow, lastUpdatedDate: e.target.value })} placeholder="Last Updated" disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedInput value={newRow.description || ''} onChange={e => setNewRow({ ...newRow, description: e.target.value })} placeholder="Description" disabled={editRowId !== null} />
-                </td>
+                {colKeys.map((key, i) => (
+                  <td key={key} style={gridTheme.td} colSpan={key === 'amount' ? 2 : 1}>
+                    {key === 'type' ? (
+                      <RoundedDropdown
+                        value={newRow.type || ''}
+                        onChange={e => setNewRow({ ...newRow, type: e.target.value })}
+                        options={typeComboOptions}
+                        placeholder="Type"
+                        disabled={editRowId !== null}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : key === 'frequency' ? (
+                      <RoundedDropdown
+                        value={newRow.frequency || ''}
+                        onChange={e => setNewRow({ ...newRow, frequency: e.target.value })}
+                        options={frequencyComboOptions}
+                        placeholder="Frequency"
+                        disabled={editRowId !== null}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : key === 'sender' ? (
+                      <RoundedDropdown
+                        value={newRow.sender || ''}
+                        onChange={e => setNewRow({ ...newRow, sender: e.target.value })}
+                        options={userOptions}
+                        placeholder="Sender"
+                        disabled={editRowId !== null}
+                        style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : key === 'receiver' ? (
+                      <RoundedDropdown
+                        value={newRow.receiver || ''}
+                        onChange={e => setNewRow({ ...newRow, receiver: e.target.value })}
+                        options={userOptions}
+                        placeholder="Receiver"
+                        disabled={editRowId !== null}
+                        style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : key === 'ownerId' ? (
+                      <RoundedDropdown
+                        value={newRow.ownerId || ''}
+                        onChange={e => setNewRow({ ...newRow, ownerId: e.target.value })}
+                        options={userOptions}
+                        placeholder="Owner"
+                        disabled={editRowId !== null}
+                        style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : key === 'amount' ? (
+                      <div style={FLEX_ROW_CENTER}>
+                        <RoundedInput 
+                          value={newRow.amount || ''} 
+                          onChange={e => setNewRow({ ...newRow, amount: e.target.value })} 
+                          placeholder="Amount" 
+                          style={{ width: '60%' }} 
+                          disabled={editRowId !== null}
+                          colFonts={columnFonts}
+                          colHeaders={colHeaders}
+                          allRows={allRows}
+                          colKey={key}
+                          i={i}
+                        />
+                        <RoundedDropdown
+                          value={newRow.currency || ''}
+                          onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
+                          options={currencyOptions}
+                          placeholder="Currency"
+                          disabled={editRowId !== null}
+                        />
+                      </div>
+                    ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
+                      <RoundedInput 
+                        type="date" 
+                        value={newRow[key] || ''} 
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })} 
+                        placeholder={colHeaders[i]} 
+                        disabled={editRowId !== null}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    ) : (
+                      <RoundedInput 
+                        value={newRow[key] || ''} 
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })} 
+                        placeholder={colHeaders[i]} 
+                        disabled={editRowId !== null}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    )}
+                  </td>
+                ))}
                 <td style={{ border: '1px solid #ccc', padding: 4, verticalAlign: 'middle' }}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                     <ActionButton
                       onClick={handleAdd}
                       disabled={editRowId !== null}
@@ -307,121 +332,145 @@ export default function EarningsPage(props) {
               </tr>
               {filteredEarnings.map(earning => (
                 <tr key={earning.id}>
+                  {colKeys.map((key, i) => (
+                    <td key={key} style={gridTheme.td} colSpan={key === 'amount' ? 2 : 1}>
+                      {editRowId === earning.id ? (
+                        key === 'type' ? (
+                          <RoundedDropdown
+                            value={editRowData.type || ''}
+                            onChange={e => handleRowChange(e, 'type')}
+                            options={typeComboOptions}
+                            placeholder="Type"
+                            style={{ border: '1px solid #1976d2' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : key === 'frequency' ? (
+                          <RoundedDropdown
+                            value={editRowData.frequency || ''}
+                            onChange={e => handleRowChange(e, 'frequency')}
+                            options={frequencyComboOptions}
+                            placeholder="Frequency"
+                            style={{ border: '1px solid #1976d2' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : key === 'sender' ? (
+                          <RoundedDropdown
+                            value={editRowData.sender || ''}
+                            onChange={e => handleRowChange(e, 'sender')}
+                            options={userOptions}
+                            placeholder="Sender"
+                            style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : key === 'receiver' ? (
+                          <RoundedDropdown
+                            value={editRowData.receiver || ''}
+                            onChange={e => handleRowChange(e, 'receiver')}
+                            options={userOptions}
+                            placeholder="Receiver"
+                            style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : key === 'ownerId' ? (
+                          <RoundedDropdown
+                            value={editRowData.ownerId || ''}
+                            onChange={e => handleRowChange(e, 'ownerId')}
+                            options={userOptions}
+                            placeholder="Owner"
+                            style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : key === 'amount' ? (
+                          <div style={FLEX_ROW_CENTER}>
+                            <RoundedInput 
+                              value={editRowData.amount || ''} 
+                              onChange={e => handleRowChange(e, 'amount')} 
+                              placeholder="Amount / Qty" 
+                              style={{ border: '1px solid #1976d2', width: '60%' }}
+                              colFonts={columnFonts}
+                              colHeaders={colHeaders}
+                              allRows={allRows}
+                              colKey={key}
+                              i={i}
+                            />
+                            <RoundedDropdown
+                              value={editRowData.currency || ''}
+                              onChange={e => handleRowChange(e, 'currency')}
+                              options={currencyOptions}
+                              style={{ border: '1px solid #1976d2', width: '40%' }}
+                              placeholder="Currency"
+                            />
+                          </div>
+                        ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
+                          <RoundedInput 
+                            type="date" 
+                            value={editRowData[key] || ''} 
+                            onChange={e => handleRowChange(e, key)} 
+                            placeholder={colHeaders[i]} 
+                            style={{ border: '1px solid #1976d2' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        ) : (
+                          <RoundedInput 
+                            value={editRowData[key] || ''} 
+                            onChange={e => handleRowChange(e, key)} 
+                            placeholder={colHeaders[i]} 
+                            style={{ border: '1px solid #1976d2' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        )
+                      ) : (
+                        key === 'type' ? (
+                          earning.type
+                        ) : key === 'frequency' ? (
+                          earning.frequency
+                        ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
+                          formatDisplayDate(earning[key])
+                        ) : key === 'sender' ? (
+                          getUserLabel(earning.sender)
+                        ) : key === 'receiver' ? (
+                          getUserLabel(earning.receiver)
+                        ) : key === 'ownerId' ? (
+                          getUserLabel(earning.ownerId)
+                        ) : key === 'amount' ? (
+                          <>{formatCurrencyValue(earning.amount, earning.currency)}</>
+                        ) : (
+                          earning[key]
+                        )
+                      )}
+                    </td>
+                  ))}
                   <td style={gridTheme.td}>
                     {editRowId === earning.id ? (
-                      <RoundedComboBox
-                        value={editRowData.type || ''}
-                        onChange={e => handleRowChange(e, 'type')}
-                        options={typeComboOptions}
-                        placeholder="Type"
-                        style={{ border: '1px solid #1976d2' }}
-                      />
-                    ) : (
-                      earning.type
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedDropdown
-                        value={editRowData.frequency || ''}
-                        onChange={e => handleRowChange(e, 'frequency')}
-                        options={[{ value: '', label: 'Select' }, ...frequencyOptions.map(opt => ({ value: opt, label: opt }))]}
-                        style={{ border: '1px solid #1976d2' }}
-                      />
-                    ) : (
-                      earning.frequency
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedInput type="date" value={editRowData.startDate || ''} onChange={e => handleRowChange(e, 'startDate')} placeholder="Start Date" style={{ border: '1px solid #1976d2' }} />
-                    ) : (
-                      formatDisplayDate(earning.startDate)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedComboBox
-                        value={editRowData.sender || ''}
-                        onChange={e => handleRowChange(e, 'sender')}
-                        options={[{ value: '', label: 'Select' }, ...userOptions]}
-                        style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
-                      />
-                    ) : (
-                      getUserLabel(earning.sender)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedComboBox
-                        value={editRowData.receiver || ''}
-                        onChange={e => handleRowChange(e, 'receiver')}
-                        options={[{ value: '', label: 'Select' }, ...userOptions]}
-                        style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
-                      />
-                    ) : (
-                      getUserLabel(earning.receiver)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedInput value={editRowData.item || ''} onChange={e => handleRowChange(e, 'item')} placeholder="Item" style={{ border: '1px solid #1976d2' }} />
-                    ) : (
-                      earning.item
-                    )}
-                  </td>
-                  <td style={editRowId === earning.id ? { ...gridTheme.td, border: '1px solid #1976d2' } : gridTheme.td} colSpan={2}>
-                    {editRowId === earning.id ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <RoundedInput value={editRowData.amount || ''} onChange={e => handleRowChange(e, 'amount')} placeholder="Amount / Qty" style={{ border: '1px solid #1976d2', width: '60%' }} />
-                        <RoundedDropdown
-                          value={editRowData.currency || ''}
-                          onChange={e => handleRowChange(e, 'currency')}
-                          options={[{ value: '', label: 'Select' }, ...currencyOptions]}
-                          style={{ border: '1px solid #1976d2', width: '40%' }}
-                          placeholder="Unit"
-                        />
-                      </div>
-                    ) : (
-                      <>{formatCurrencyValue(earning.amount, earning.currency)}{earning.currency ? ` ${earning.currency}` : ''}</>
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedInput type="date" value={editRowData.endDate || ''} onChange={e => handleRowChange(e, 'endDate')} placeholder="End Date" style={{ border: '1px solid #1976d2' }} />
-                    ) : (
-                      formatDisplayDate(earning.endDate)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedComboBox
-                        value={editRowData.ownerId || ''}
-                        onChange={e => handleRowChange(e, 'ownerId')}
-                        options={[{ value: '', label: 'Select' }, ...userOptions]}
-                        style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
-                      />
-                    ) : (
-                      getUserLabel(earning.ownerId)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedInput type="date" value={editRowData.lastUpdatedDate || ''} onChange={e => handleRowChange(e, 'lastUpdatedDate')} placeholder="Last Updated" style={{ border: '1px solid #1976d2' }} />
-                    ) : (
-                      formatDisplayDate(earning.lastUpdatedDate)
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <RoundedInput value={editRowData.description || ''} onChange={e => handleRowChange(e, 'description')} placeholder="Description" style={{ border: '1px solid #1976d2' }} />
-                    ) : (
-                      earning.description
-                    )}
-                  </td>
-                  <td style={gridTheme.td}>
-                    {editRowId === earning.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                         <ActionButton
                           onClick={() => handleRowSave(earning.id)}
                           type="save"
@@ -434,7 +483,7 @@ export default function EarningsPage(props) {
                         />
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                         <ActionButton
                           onClick={() => handleRowEdit(earning)}
                           type="edit"

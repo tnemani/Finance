@@ -1,17 +1,11 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
-import { gridTheme } from './gridTheme';
-import './RoundedDropdown.css';
+import { inputTheme } from './inputTheme';
 import { DropdownPortal } from './DropdownPortal';
+import { DROPDOWN_MIN_WIDTH } from '../constants/ui';
+import './RoundedDropdown.css';
+import { getTextWidth } from '../helpers/Helper';
 
-function getTextWidth(text, font = '16px Arial') {
-  if (typeof document === 'undefined') return 200;
-  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
-  const context = canvas.getContext('2d');
-  context.font = font;
-  return context.measureText(text).width;
-}
-
-function RoundedDropdown({ options = [], value, onChange, style = {}, placeholder = '', ...props }) {
+function RoundedDropdown({ options = [], value, onChange, style = {}, placeholder = '', customWidth = 40, ...props }) {
   const [showList, setShowList] = useState(false);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const [maxWidth, setMaxWidth] = useState(200);
@@ -22,20 +16,28 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
   const font = (style.fontSize ? `${style.fontSize}px` : '16px') + ' Arial';
   useLayoutEffect(() => {
     const widths = options.map(opt => getTextWidth((opt.label ?? opt).toString(), font));
-    const widest = Math.max(80, ...widths) + 70; // 70px for arrow and padding
+    const widest = Math.max(80, ...widths) + 0; // 70px for arrow and padding
     setMaxWidth(widest);
   }, [options, font]);
   const width = style.width || maxWidth;
+
+  const mergedStyle = { ...inputTheme, ...style };
 
   // Close dropdown on outside click
   React.useEffect(() => {
     if (!showList) return;
     const handleClickOutside = (e) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+      const dropdownList = document.querySelector('.roundedDropdown-list');
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target) &&
+        !(dropdownList && dropdownList.contains(e.target))
+      ) {
         setShowList(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside, true); // Use capture phase
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showList]);
 
@@ -66,6 +68,15 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
     else setHighlightedIdx(-1);
   }, [showList, options, value]);
 
+  const paddingBuffer = 12 + 12;   // left + right padding in item
+  const arrowBuffer = 20;          // space for dropdown arrow
+  const longestOptionWidth = Math.max(...options.map(opt =>
+    getTextWidth((opt.label ?? opt).toString(), font)
+  ));
+
+const finalWidth =  Math.max(customWidth, longestOptionWidth + paddingBuffer + arrowBuffer)+ 15;
+
+
   const handleSelect = val => {
     setInputValue(val);
     if (onChange) onChange({ target: { value: val } });
@@ -76,7 +87,7 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
     <div
       className="roundedDropdown custom"
       ref={wrapperRef}
-      style={{ width, minWidth: 140, maxWidth, ...style }}
+      style={{ ...mergedStyle, width: finalWidth, position: 'relative' }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
@@ -84,9 +95,9 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
         className="roundedDropdown-display"
         ref={displayRef}
         onClick={() => setShowList(v => !v)}
-        style={{ minWidth: 140, maxWidth, width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 35 }}
+        style={{ minWidth: finalWidth, maxWidth: finalWidth, width: finalWidth, cursor: 'pointer', height: inputTheme.height }}
       >
-        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: 16 }}>
+        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {options.find(opt => (opt.value ?? opt) === value)?.label ?? options.find(opt => (opt.value ?? opt) === value) ?? placeholder}
         </span>
         <span className="roundedDropdown-arrow" style={{ marginRight: 16, display: 'flex', alignItems: 'center' }}>
@@ -96,23 +107,35 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
         </span>
       </div>
       {showList && options.length > 0 && (
-        <DropdownPortal anchorRef={displayRef}>
-          <ul className="roundedDropdown-list" style={{ minWidth: displayRef.current ? displayRef.current.offsetWidth : 140, maxWidth }}>
-            {options.map((opt, idx) => (
-              <li
-                key={opt.value ?? opt}
-                className={
-                  'roundedDropdown-item' + (idx === highlightedIdx ? ' highlighted' : '')
-                }
-                onMouseDown={() => handleSelect(opt.value ?? opt)}
-                onMouseEnter={() => setHighlightedIdx(idx)}
-                style={{ borderRadius: 20 }}
-              >
-                {opt.label ?? opt}
-              </li>
-            ))}
-          </ul>
-        </DropdownPortal>
+    <DropdownPortal anchorRef={displayRef}>
+    <div className="roundedDropdown-list" style={{ width: finalWidth, cursor: 'pointer'}}>
+    <div className="roundedDropdown-scrollable">
+      <ul style={{ margin: 0, padding: 0 }}>
+        {options.map((opt, idx) => (
+          <li
+            key={opt.value ?? opt}
+            className={'roundedDropdown-item' + (idx === highlightedIdx ? ' highlighted' : '')}
+            onMouseDown={() => handleSelect(opt.value ?? opt)}
+            onMouseEnter={() => setHighlightedIdx(idx)}
+            style={{
+              borderRadius: 20,
+              whiteSpace: 'nowrap',
+              height: 25,
+              display: 'flex',
+              alignItems: 'center',
+              margin: '2px 0',
+              padding: '4px 12px'
+            }}
+            title={opt.label ?? opt}
+          >
+            {opt.label ?? opt}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</DropdownPortal>
+
       )}
     </div>
   );

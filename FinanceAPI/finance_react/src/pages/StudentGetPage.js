@@ -2,15 +2,36 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PoliciesStocksIcon from '../components/icons/graduate.png';
 import GridBanner from '../components/GridBanner';
-import { gridTheme, currencyOptions, roundedInputTheme, roundedSelectTheme, editableDropdownTheme } from '../components/gridTheme';
+import { gridTheme} from '../components/gridTheme';
 import { ActionButton } from '../components/ActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
-import RoundedComboBox from '../components/RoundedComboBox';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
+import { currencyOptions } from '../constants/Fixedlist';
+import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+
+import {
+  createGenericHandlers,
+  createSearchFilter,
+  SPACING,
+  FLEX_ROW_CENTER,
+  ACTION_BUTTON_CONTAINER_STYLE,
+  createColumnFonts,
+  createAllRows
+} from '../constants/common';
+import '../constants/common.css';
 
 const API_URL = 'http://localhost:5226/api/StudentGET';
+
+
+// Helper function to parse student get row data for API
+const parseStudentGetRow = (row) => ({
+  ...row,
+  qty: row.qty !== undefined && row.qty !== '' ? Number(row.qty) : null,
+  currentValue: row.currentValue !== undefined && row.currentValue !== '' ? Number(row.currentValue) : null,
+  userId: row.userId !== undefined ? Number(row.userId) : null
+});
 
 function StudentGetPage() {
   const [gets, setGets] = useState([]);
@@ -25,22 +46,15 @@ function StudentGetPage() {
   const [undoIdx, setUndoIdx] = useState(null);
   const [symbolValueMap, setSymbolValueMap] = useState({});
 
-  // Fetch users first, then gets, and always map userShortName
-  useEffect(() => {
-    fetchUsers();
-    fetchSymbolSettingsMap().then(setSymbolValueMap);
-  }, []);
+  // Define column structure similar to DiamondPage
+  const colKeys = ['userShortName', 'policyNo', 'symbol', 'qty', 'currency', 'currentValue', 'startDate', 'financialnstitution', 'description'];
+  const colHeaders = ['User', 'Policy No', 'Symbol', 'Quantity', 'Currency', 'Current Value', 'Start Date', 'Financial Institution', 'Description'];
 
+  // Declare fetch functions first to avoid temporal dead zone
   const fetchUsers = async () => {
     const res = await axios.get('http://localhost:5226/api/users');
     setUsers(res.data);
   };
-
-  // When users change, refetch gets and map userShortName
-  useEffect(() => {
-    if (users.length > 0) fetchGets();
-    // eslint-disable-next-line
-  }, [users]);
 
   const fetchGets = async () => {
     const res = await axios.get(API_URL);
@@ -50,19 +64,43 @@ function StudentGetPage() {
     }));
   };
 
+  // Use common generic handlers
+  const {
+    handleRowSave,
+    handleRowCancel,
+    handleDelete,
+    handleAdd
+  } = createGenericHandlers({
+    apiUrl: API_URL,
+    editRowData: editRow,
+    setEditRowId: setEditIdx,
+    setEditRowData: setEditRow,
+    newRow: addRow,
+    setNewRow: setAddRow,
+    fetchData: fetchGets,
+    parseRow: parseStudentGetRow,
+    modalConfig: {
+      update: 'Are you sure you want to update this student get?',
+      delete: 'Are you sure you want to delete this student get?',
+      add: 'Are you sure you want to add this student get?'
+    },
+    setConfirm
+  });
+
+  // Fetch users first, then gets, and always map userShortName
   useEffect(() => {
-    if (!searchText) setFilteredGets(gets);
-    else {
-      const lower = searchText.toLowerCase();
-      setFilteredGets(
-        gets.filter(s =>
-          Object.values(s).some(val =>
-            (typeof val === 'string' && val.toLowerCase().includes(lower)) ||
-            (typeof val === 'number' && String(val).includes(lower))
-          )
-        )
-      );
-    }
+    fetchUsers();
+    fetchSymbolSettingsMap().then(setSymbolValueMap);
+  }, []);
+
+  // When users change, refetch gets and map userShortName
+  useEffect(() => {
+    if (users.length > 0) fetchGets();
+    // eslint-disable-next-line
+  }, [users]);
+
+  useEffect(() => {
+    setFilteredGets(createSearchFilter(gets, searchText));
   }, [searchText, gets]);
 
   const handleEdit = idx => {
@@ -82,47 +120,10 @@ function StudentGetPage() {
     setEditRow({});
     fetchGets();
   };
-  const handleDelete = idx => {
-    setUndoRow(filteredGets[idx]);
-    setUndoIdx(idx);
-    setConfirm({ open: true, idx });
-  };
-  const handleConfirmDelete = async () => {
-    const row = filteredGets[confirm.idx];
-    await axios.delete(`${API_URL}/${row.id}`);
-    setConfirm({ open: false, idx: null });
-    fetchGets();
-  };
-  const handleUndo = () => {
-    if (undoRow) {
-      axios.post(API_URL, undoRow).then(() => {
-        setUndoRow(null);
-        setUndoIdx(null);
-        fetchGets();
-      });
-    }
-  };
-  const handleAdd = async () => {
-    // Always set type as 'Student' before sending
-    const { currentValue, ...rowToAdd } = { ...addRow, type: 'Student' };
-    // Remove empty/undefined fields and id if present
-    Object.keys(rowToAdd).forEach(key => {
-      if (rowToAdd[key] === undefined || rowToAdd[key] === null || rowToAdd[key] === '') {
-        delete rowToAdd[key];
-      }
-      if (key.toLowerCase() === 'id') {
-        delete rowToAdd[key];
-      }
-    });
-    if (!rowToAdd.symbol) return;
-    try {
-      await axios.post(API_URL, rowToAdd);
-      setAddRow({ userShortName: '', type: 'Student', symbol: '', qty: '', currency: '', currentValue: '', startDate: '', description: '' });
-      fetchGets();
-    } catch (err) {
-      alert('Failed to add record. ' + (err?.response?.data?.message || err.message));
-    }
-  };
+
+  // Add common helper functions
+  const columnFonts = createColumnFonts(colKeys.length);
+  const allRows = createAllRows(addRow, filteredGets, editRow);
 
   function getTextWidth(text, font = '16px Arial') {
     if (typeof document === 'undefined') return 200;
@@ -146,39 +147,39 @@ function StudentGetPage() {
 
   // Unique type options for the Type combo box
   const typeOptions = Array.from(new Set([addRow.type, ...filteredGets.map(s => s.type), editRow.type].filter(Boolean))).map(t => ({ value: t, label: t }));
-  const typeComboOptions = [{ value: '', label: 'Select' }, ...typeOptions];
+  const typeComboOptions = typeOptions;
 
-  const allRows = [addRow, ...filteredGets, editRow];
-  // Remove 'type' from colKeys and colHeaders for grid rendering
-  const colKeys = [
-    'userShortName', /* 'type' removed */ 'policyNo', 'symbol', 'qtyCurrency', 'currentValue', 'startDate', 'financialnstitution', 'description'
-  ];
-  const colHeaders = [
-    'User', /* 'Type' removed */ 'Policy No', 'Symbol', 'Quantity', 'Current Value', 'Start Date', 'Financial Institution', 'Description'
-  ];
-  const colFonts = Array(colKeys.length).fill('16px Arial');
-  const colWidths = colKeys.map((key, i) => {
+  // Create user options for dropdowns
+  const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
+
+  // Calculate column widths similar to original colWidths logic
+  function getColWidth(key, header, index) {
     if (key === 'qtyCurrency') {
       // Only use qty for width calculation
-      const headerWidth = getTextWidth('Quantity', colFonts[i]);
-      const cellWidths = allRows.map(row => getTextWidth((row && row.qty) ? String(row.qty) : '', colFonts[i]));
+      const headerWidth = getTextWidth('Quantity', '16px Arial');
+      const cellWidths = allRows.map(row => getTextWidth((row && row.qty) ? String(row.qty) : '', '16px Arial'));
       return Math.max(headerWidth, ...cellWidths, 80) + 40;
     } else if (key === 'userShortName') {
       // Expand user cell to fit dropdown comfortably
-      const headerWidth = getTextWidth(colHeaders[i], colFonts[i]);
-      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', colFonts[i]));
+      const headerWidth = getTextWidth(header, '16px Arial');
+      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
       // Add extra width for dropdown arrow and padding
       return Math.max(headerWidth, ...cellWidths, 120) + 80;
     } else {
-      const headerWidth = getTextWidth(colHeaders[i], colFonts[i]);
-      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', colFonts[i]));
+      const headerWidth = getTextWidth(header, '16px Arial');
+      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
       return Math.max(headerWidth, ...cellWidths, 80) + 40;
     }
-  });
+  }
 
   return (
-    <div style={{ padding: 20, paddingTop: 0 }}>
-      <ConfirmModal open={confirm.open} message="Are you sure you want to delete this record?" onConfirm={handleConfirmDelete} onCancel={() => setConfirm({ open: false, idx: null })} />
+    <div className="page-container">
+      <ConfirmModal 
+        open={confirm.open} 
+        message={confirm.message || "Are you sure you want to delete this record?"} 
+        onConfirm={confirm.onConfirm} 
+        onCancel={() => setConfirm({ open: false, idx: null })} 
+      />
       <GridBanner
         icon={PoliciesStocksIcon}
         title="Student Investments"
@@ -191,7 +192,7 @@ function StudentGetPage() {
       />
       <div style={{ height: 12 }} />
       {/* Remove undoRow notification if not needed, or keep as per your requirements */}
-      <div style={{ width: 'fit-content', minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>
+      <div style={{ width: 'fit-content', margin: '0 auto', maxWidth: '100%' }}>
         <div style={{
           ...gridTheme.scrollContainer,
           maxHeight: 260, // 4 rows (48px each) + header (48px) + some padding
@@ -202,7 +203,7 @@ function StudentGetPage() {
             <thead>
               <tr>
                 {colHeaders.map((header, i) => (
-                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'nowrap', maxWidth: colWidths[i], minWidth: 80, width: colWidths[i], textAlign: 'left', fontWeight: 600, fontSize: 16 }}>{header}</th>
+                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'nowrap', maxWidth: getColWidth(colKeys[i], header, i), width: getColWidth(colKeys[i], header, i), textAlign: 'left', fontWeight: 600, fontSize: 16 }}>{header}</th>
                 ))}
                 <th style={{ ...gridTheme.th, whiteSpace: 'nowrap' }}></th>
               </tr>
@@ -211,63 +212,95 @@ function StudentGetPage() {
               <tr>
                 {colKeys.map((key, i) => (
                   key === 'qtyCurrency' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 110, width: colWidths[i], paddingRight: 8 }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i), paddingRight: 8 }}>
                       <RoundedInput
                         value={addRow.qty}
                         onChange={e => setAddRow({ ...addRow, qty: e.target.value })}
                         placeholder="Quantity"
-                        style={{ width: '100%', minWidth: 90, maxWidth: colWidths[i], textAlign: 'left' }}
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i), textAlign: 'left' }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
                       />
                     </td>
                   ) : key === 'userShortName' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 140, width: colWidths[i] }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
-                        options={[{ value: '', label: 'Select' }, ...users.map(u => ({ value: u.shortName, label: u.shortName }))]}
+                        options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
                         placeholder="User"
-                        style={{ width: '100%', minWidth: 130, maxWidth: colWidths[i] }}
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    </td>
+                  ) : key === 'currency' ? (
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                      <RoundedDropdown
+                        value={addRow.currency}
+                        onChange={e => setAddRow({ ...addRow, currency: e.target.value })}
+                        options={currencyOptions}
+                        placeholder="Currency"
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
                       />
                     </td>
                   ) : key === 'currentValue' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
                       {/* Show current value for add row */}
                       {(() => {
                         const symbol = addRow.symbol;
                         const qty = parseFloat(addRow.qty) || 0;
                         const valuePerUnit = getValueForSymbol(symbol);
                         const value = qty * valuePerUnit;
-                        let valueStr = value > 0 ? Math.round(value).toString() : '';
-                        let currency = addRow.currency || '$';
-                        let formattedValue = valueStr;
-                        if (valueStr) {
-                          if (currency === 'Rs' || currency === 'INR') {
-                            formattedValue = Number(valueStr).toLocaleString('en-IN');
-                          } else {
-                            formattedValue = Number(valueStr).toLocaleString('en-US');
-                          }
-                        }
-                        return valueStr ? `${formattedValue} ${currency}` : '';
+                        let currency = addRow.currency;
+                        const formattedValue = formatCurrencyValue(value, currency);
+                        return formattedValue ? `${formattedValue}` : '';
                       })()}
                     </td>
                   ) : key === 'startDate' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
                       <RoundedInput
                         type="date"
                         value={addRow.startDate || ''}
                         onChange={e => setAddRow({ ...addRow, startDate: e.target.value })}
                         placeholder="Start Date"
-                        style={{ width: '100%', minWidth: 80, maxWidth: colWidths[i] }}
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
                       />
                     </td>
                   ) : (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
-                      <RoundedInput value={addRow[key]} onChange={e => setAddRow({ ...addRow, [key]: e.target.value })} placeholder={colHeaders[i]} style={{ maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }} />
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                      <RoundedInput 
+                        value={addRow[key]} 
+                        onChange={e => setAddRow({ ...addRow, [key]: e.target.value })} 
+                        placeholder={colHeaders[i]} 
+                        style={{ maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
                     </td>
                   )
                 ))}
                 <td style={gridTheme.td}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                     <ActionButton onClick={handleAdd} type="save" title="Add" />
                     <ActionButton onClick={() => setAddRow({ userShortName: '', type: 'Student', policyNo: '', symbol: '', qty: '', currency: '', currentValue: '', startDate: '', financialnstitution: '', description: '' })} type="undo" title="Undo" />
                   </div>
@@ -279,13 +312,23 @@ function StudentGetPage() {
                   if (editIdx === idx) {
                     if (key === 'qtyCurrency') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
-                          <RoundedInput value={editRow.qty} onChange={e => setEditRow({ ...editRow, qty: e.target.value })} placeholder="Qty" style={{ width: '100%', minWidth: 50, textAlign: 'left' }} />
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                          <RoundedInput 
+                            value={editRow.qty} 
+                            onChange={e => setEditRow({ ...editRow, qty: e.target.value })} 
+                            placeholder="Qty" 
+                            style={{ width: '100%', textAlign: 'left' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
                         </td>
                       );
                     } else if (key === 'userShortName') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 140, width: colWidths[i] }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
                           <RoundedDropdown
                             value={editRow.userShortName}
                             onChange={e => {
@@ -297,9 +340,31 @@ function StudentGetPage() {
                                 userId: user ? user.id : undefined
                               });
                             }}
-                            options={[{ value: '', label: 'Select' }, ...users.map(u => ({ value: u.shortName, label: u.shortName }))]}
+                            options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
                             placeholder="User"
-                            style={{ width: '100%', minWidth: 130, maxWidth: colWidths[i] }}
+                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        </td>
+                      );
+                    } else if (key === 'currency') {
+                      return (
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                          <RoundedDropdown
+                            value={editRow.currency}
+                            onChange={e => setEditRow({ ...editRow, currency: e.target.value })}
+                            options={currencyOptions}
+                            placeholder="Currency"
+                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
                           />
                         </td>
                       );
@@ -309,37 +374,43 @@ function StudentGetPage() {
                       const qty = parseFloat(editRow.qty) || 0;
                       const valuePerUnit = getValueForSymbol(symbol);
                       const value = qty * valuePerUnit;
-                      let valueStr = value > 0 ? Math.round(value).toString() : '';
-                      let currency = editRow.currency || '$';
-                      let formattedValue = valueStr;
-                      if (valueStr) {
-                        if (currency === 'Rs' || currency === 'INR') {
-                          formattedValue = Number(valueStr).toLocaleString('en-IN');
-                        } else {
-                          formattedValue = Number(valueStr).toLocaleString('en-US');
-                        }
-                      }
+                      let currency = editRow.currency;
+                      const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
-                          {valueStr ? `${formattedValue} ${currency}` : ''}
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                          {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
                     } else if (key === 'startDate') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
                           <RoundedInput
                             type="date"
                             value={editRow.startDate || ''}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
                             placeholder="Start Date"
-                            style={{ border: '1px solid #1976d2', width: '100%', minWidth: 80, maxWidth: colWidths[i] }}
+                            style={{ border: '1px solid #1976d2', width: '100%',  maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
                           />
                         </td>
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
-                          <RoundedInput value={editRow[key]} onChange={e => setEditRow({ ...editRow, [key]: e.target.value })} style={{ border: '1px solid #1976d2', maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }} />
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                          <RoundedInput 
+                            value={editRow[key]} 
+                            onChange={e => setEditRow({ ...editRow, [key]: e.target.value })} 
+                            style={{ border: '1px solid #1976d2', maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
                         </td>
                       );
                     }
@@ -347,8 +418,8 @@ function StudentGetPage() {
                     if (key === 'qtyCurrency') {
                       // Always show the quantity value in view mode
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i], textAlign: 'left' }}>
-                          <span style={{ minWidth: 60, textAlign: 'left', font: colFonts[i] }}>{s.qty}</span>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i), textAlign: 'left' }}>
+                          <span style={{ textAlign: 'left', font: columnFonts[i] }}>{s.qty}</span>
                         </td>
                       );
                     } else if (key === 'currentValue') {
@@ -357,19 +428,11 @@ function StudentGetPage() {
                       const qty = parseFloat(s.qty) || 0;
                       const valuePerUnit = getValueForSymbol(symbol);
                       const value = qty * valuePerUnit;
-                      let valueStr = value > 0 ? Math.round(value).toString() : '';
-                      let currency = s.currency || '$';
-                      let formattedValue = valueStr;
-                      if (valueStr) {
-                        if (currency === 'Rs' || currency === 'INR') {
-                          formattedValue = Number(valueStr).toLocaleString('en-IN');
-                        } else {
-                          formattedValue = Number(valueStr).toLocaleString('en-US');
-                        }
-                      }
+                      let currency = s.currency;
+                      const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>
-                          {valueStr ? `${formattedValue} ${currency}` : ''}
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                          {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
                     } else if (key === 'startDate') {
@@ -385,17 +448,23 @@ function StudentGetPage() {
                         }
                       }
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>{formatted}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{formatted}</td>
                       );
                     } else if (key === 'userShortName') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 140, width: colWidths[i] }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
                           {s.userShortName}
+                        </td>
+                      );
+                    } else if (key === 'currency') {
+                      return (
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                          {getCurrencyDisplayLabel(s.currency)}
                         </td>
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: colWidths[i], minWidth: 80, width: colWidths[i] }}>{s[key]}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{s[key]}</td>
                       );
                     }
                   }
@@ -404,7 +473,7 @@ function StudentGetPage() {
                 if (editIdx === idx) {
                   cells.push(
                     <td key="actions" style={gridTheme.td}>
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                         <ActionButton onClick={() => handleSave(idx)} type="save" title="Save" />
                         <ActionButton onClick={handleCancel} type="cancel" title="Cancel" />
                       </div>
@@ -413,7 +482,7 @@ function StudentGetPage() {
                 } else {
                   cells.push(
                     <td key="actions" style={gridTheme.td}>
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                         <ActionButton onClick={() => handleEdit(idx)} type="edit" title="Edit" />
                         <ActionButton onClick={() => handleDelete(idx)} type="delete" title="Delete" />
                       </div>

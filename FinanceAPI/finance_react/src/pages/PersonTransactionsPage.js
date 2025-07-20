@@ -2,15 +2,43 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import earningsBanner from '../components/icons/earnings_banner.png';
 import GridBanner from '../components/GridBanner';
-import { gridTheme, currencyOptions } from '../components/gridTheme';
+import { gridTheme } from '../components/gridTheme';
+import { currencyOptions } from '../constants/Fixedlist';
 import { ActionButton } from '../components/ActionButton';
 import { fetchUsers } from '../utils/userApi';
 import ConfirmModal from '../components/ConfirmModal';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
+import { inputTheme } from '../components/inputTheme';
+import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+import {
+  SPACING,
+  FLEX_ROW_CENTER,
+  PAGE_CONTAINER_STYLE,
+  TABLE_CONTAINER_STYLE,
+  SCROLL_CONTAINER_STYLE,
+  ACTION_BUTTON_CONTAINER_STYLE,
+  createSearchFilter,
+  createColumnFonts,
+  createAllRows
+} from '../constants/common';
+import '../constants/common.css';
 
 const SUMMARY_API_URL = 'http://localhost:5226/api/persontransactions';
 const SUMMARY_API_SUMMARY_URL = 'http://localhost:5226/api/persontransactions/summary';
+
+// Column definitions for consistent use
+const SUMMARY_COLUMNS = {
+  keys: ['sourceShortName', 'netAmount', 'currency', 'destinationShortName'],
+  headers: ['Source', 'Total Amount', 'Currency', 'Destination']
+};
+
+const DETAIL_COLUMNS = {
+  keys: ['purpose', 'amount', 'scheduleDate', 'status'],
+  headers: ['Purpose', 'Amount', 'Schedule Date', 'Status'],
+  types: ['text', 'number', 'date', 'text'],
+  placeholders: ['Transaction purpose', 'Amount', 'Schedule date', 'Status']
+};
 
 function PersonTransactionsPage() {
   const [summary, setSummary] = useState([]);
@@ -24,41 +52,38 @@ function PersonTransactionsPage() {
   const [users, setUsers] = useState([]);
   const [confirm, setConfirm] = useState({ open: false, type: '', idx: null, s: null, detailIdx: null });
 
+  // Define column structure similar to DiamondPage
+  const colKeys = ['sourceShortName', 'netAmount', 'destinationShortName'];
+  const colHeaders = ['Source', 'Total Amount', 'Destination'];
+  const detailColKeys = ['purpose', 'amount', 'scheduleDate', 'status'];
+  const detailColHeaders = ['Purpose', 'Amount', 'Schedule Date', 'Status'];
+  
+  // Column helpers for consistent styling
+  const allRows = createAllRows(newRow, filteredSummary, editRowData);
+  const colFonts = createColumnFonts(colKeys.length);
+  const detailColFonts = createColumnFonts(detailColKeys.length);
+
   useEffect(() => {
     fetchSummary();
     fetchUsers().then(setUsers);
   }, []);
 
   useEffect(() => {
-    if (!searchText) setFilteredSummary(sortSummaryRows(summary));
+    if (!searchText) setFilteredSummary(summary);
     else {
       const lower = searchText.toLowerCase();
-      setFilteredSummary(sortSummaryRows(
         summary.filter(s =>
           Object.values(s).some(val =>
             (typeof val === 'string' && val.toLowerCase().includes(lower)) ||
             (typeof val === 'number' && String(val).includes(lower))
           )
-        )
-      ));
+      );
     }
   }, [searchText, summary]);
 
-  // Set default values for new summary record
-  useEffect(() => {
-    if (summary.length > 0 && Object.keys(newRow).length === 0) {
-      setNewRow({
-        sourceShortName: summary[0].sourceShortName,
-        destinationShortName: summary[0].destinationShortName,
-        currency: summary[0].currency,
-        netAmount: '',
-      });
-    }
-  }, [summary]);
-
   const fetchSummary = async () => {
     const res = await axios.get(SUMMARY_API_SUMMARY_URL);
-    setSummary(sortSummaryByCurrency(res.data));
+    setSummary(res.data);
   };
 
   const toggleRow = idx => {
@@ -237,69 +262,8 @@ function PersonTransactionsPage() {
 
   const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
 
-  // Robust helper to format amount with commas as per currency, no decimals
-  function formatAmount(value, currency) {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    if (isNaN(num)) return value;
-    const c = (currency || '').toString().trim().toLowerCase();
-    if (c === 'rs' || c === 'inr' || c === '₹' || c === 'rupees') {
-      return num.toLocaleString('en-IN', { maximumFractionDigits: 0 });
-    }
-    // US/other: 125,678,000
-    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  }
-
-  // Helper to get currency sort order
-  function getCurrencyOrder(currency) {
-    if (!currency) return 999;
-    const c = currency.toString().trim().toLowerCase();
-    if (["usd", "$", "dollars", "dollar"].includes(c)) return 0;
-    if (["inr", "rs", "₹", "rupees", "rupee"].includes(c)) return 1;
-    return 2;
-  }
-
-  // Helper to sort summary rows by currency order, then alphabetically for others
-  function sortSummaryByCurrency(arr) {
-    return arr.slice().sort((a, b) => {
-      const orderA = getCurrencyOrder(a.currency);
-      const orderB = getCurrencyOrder(b.currency);
-      if (orderA !== orderB) return orderA - orderB;
-      if (orderA === 2 && orderB === 2) {
-        // Both are "other" currencies, sort alphabetically
-        const ca = (a.currency || '').toLowerCase();
-        const cb = (b.currency || '').toLowerCase();
-        if (ca < cb) return -1;
-        if (ca > cb) return 1;
-        return 0;
-      }
-      return 0;
-    });
-  }
-
-  // Custom sort: USD first, INR/Rs/₹ next, then others alphabetically
-  function sortSummaryRows(rows) {
-    return [...rows].sort((a, b) => {
-      const getCurrencyRank = c => {
-        const cur = (c || '').toString().trim().toUpperCase();
-        if (cur === 'USD' || cur === '$' || cur === 'DOLLARS') return 0;
-        if (cur === 'INR' || cur === 'RS' || cur === '₹' || cur === 'RUPEES') return 1;
-        return 2;
-      };
-      const rankA = getCurrencyRank(a.currency);
-      const rankB = getCurrencyRank(b.currency);
-      if (rankA !== rankB) return rankA - rankB;
-      if (rankA === 2 && rankB === 2) {
-        // Both are "other" currencies, sort alphabetically
-        return (a.currency || '').localeCompare(b.currency || '');
-      }
-      // For USD/INR, keep original order
-      return 0;
-    });
-  }
-
   return (
-    <div style={{ padding: 20, paddingTop: 0 }}>
+    <div style={PAGE_CONTAINER_STYLE}>
       <ConfirmModal
         open={confirm.open}
         message={confirm.type === 'summary' ? 'Are you sure you want to delete this summary record?' : 'Are you sure you want to delete this detail record?'}
@@ -312,53 +276,95 @@ function PersonTransactionsPage() {
         searchText={searchText}
         setSearchText={setSearchText}
         placeholder="Search summary..."
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', textAlign: 'left', width: '100%' }}
-        titleStyle={{ fontSize: 28, fontWeight: 600, marginLeft: 12, textAlign: 'left', display: 'inline-block' }}
-        iconStyle={{ height: 40, display: 'inline-block' }}
       />
-      <div style={{ height: 12 }} />
-      <div style={{ width: 'auto', minWidth: 0, margin: '0 auto', maxWidth: '100%', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ ...gridTheme.scrollContainer, maxHeight: 600, overflowY: 'auto' }}>
-          <table style={{ ...gridTheme.table, width: 'auto', tableLayout: 'auto', margin: '0 auto' }}>
+      <div style={{ height: SPACING.large }} />
+      <div style={TABLE_CONTAINER_STYLE}>
+        <div style={{
+          ...gridTheme.scrollContainer,
+          ...SCROLL_CONTAINER_STYLE,
+          maxHeight: 600
+        }}>
+          <table style={{ ...gridTheme.table, width: 'auto', tableLayout: 'auto', margin: '0 auto' }} className="table-auto-layout">
             <thead>
               <tr>
                 <th style={gridTheme.th}></th>
-                <th style={gridTheme.th}>Source</th>
-                <th style={gridTheme.th}>Total Amount</th>
-                <th style={gridTheme.th}>Destination</th>
-                {/* Remove separate Currency column header */}
+                {colHeaders.map((header, i) => (
+                  <th key={header} style={gridTheme.th}>{header}</th>
+                ))}
+                <th style={gridTheme.th}></th>
               </tr>
             </thead>
             <tbody>
               {/* Add row for new summary record */}
               <tr>
                 <td style={gridTheme.td}></td>
+                {colKeys.map((key, i) => (
+                  <td key={key} style={gridTheme.td}>
+                    {key === 'sourceShortName' ? (
+                      <RoundedDropdown
+                        value={newRow.sourceShortName || ''}
+                        onChange={e => setNewRow({ ...newRow, sourceShortName: e.target.value })}
+                        options={userOptions}
+                        placeholder="Source"
+                        colFonts={colFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                        style={{ ...inputTheme }}
+                      />
+                    ) : key === 'netAmount' ? (
+                      <div style={{ ...FLEX_ROW_CENTER, gap: SPACING.medium }}>
+                        <RoundedInput 
+                          type="number" 
+                          value={newRow.netAmount || ''} 
+                          onChange={e => setNewRow({ ...newRow, netAmount: e.target.value })} 
+                          placeholder="Total Amount"
+                          colFonts={colFonts}
+                          colHeaders={colHeaders}
+                          allRows={allRows}
+                          colKey={key}
+                          i={i}
+                          style={{ ...inputTheme }}
+                        />
+                        <RoundedDropdown
+                          value={newRow.currency || ''}
+                          onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
+                          options={currencyOptions}
+                          placeholder="Currency"
+                          style={{ ...inputTheme }}
+                        />
+                      </div>
+                    ) : key === 'destinationShortName' ? (
+                      <RoundedDropdown
+                        value={newRow.destinationShortName || ''}
+                        onChange={e => setNewRow({ ...newRow, destinationShortName: e.target.value })}
+                        options={userOptions}
+                        placeholder="Destination"
+                        colFonts={colFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                        style={{ ...inputTheme }}
+                      />
+                    ) : (
+                      <RoundedInput
+                        value={newRow[key] || ''}
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })}
+                        placeholder={colHeaders[i]}
+                        colFonts={colFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                        style={{ ...inputTheme }}
+                      />
+                    )}
+                  </td>
+                ))}
                 <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.sourceShortName || ''}
-                    onChange={e => setNewRow({ ...newRow, sourceShortName: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...userOptions]}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <RoundedInput type="number" value={newRow.netAmount || ''} onChange={e => setNewRow({ ...newRow, netAmount: e.target.value })} placeholder="Total Amount" />
-                    <RoundedDropdown
-                      value={newRow.currency || ''}
-                      onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
-                      options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
-                    />
-                  </div>
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.destinationShortName || ''}
-                    onChange={e => setNewRow({ ...newRow, destinationShortName: e.target.value })}
-                    options={[{ value: '', label: 'Select' }, ...userOptions]}
-                  />
-                </td>
-                <td style={{ border: '1px solid #ccc', padding: 4, verticalAlign: 'middle', minWidth: 90 }}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
+                  <div style={{ ...FLEX_ROW_CENTER, ...ACTION_BUTTON_CONTAINER_STYLE }}>
                     <ActionButton
                       onClick={handleAdd}
                       type="save"
@@ -376,38 +382,83 @@ function PersonTransactionsPage() {
                 <React.Fragment key={idx}>
                   <tr>
                     <td style={gridTheme.td}>
-                      <button onClick={() => toggleRow(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>
+                      <button 
+                        onClick={() => toggleRow(idx)} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}
+                        className="transparent-button"
+                      >
                         {expandedRows.includes(idx) ? '▼' : '▶'}
                       </button>
                     </td>
                     {editRowId === idx ? (
                       <>
+                        {colKeys.map((key, i) => (
+                          <td key={key} style={gridTheme.td}>
+                            {key === 'sourceShortName' ? (
+                              <RoundedDropdown
+                                value={editRowData.sourceShortName || ''}
+                                onChange={e => handleRowChange(e, 'sourceShortName')}
+                                options={userOptions}
+                                placeholder="Source"
+                                colFonts={colFonts}
+                                colHeaders={colHeaders}
+                                allRows={allRows}
+                                colKey={key}
+                                i={i}
+                                style={{ ...inputTheme }}
+                              />
+                            ) : key === 'netAmount' ? (
+                              <div style={{ ...FLEX_ROW_CENTER, gap: SPACING.medium }}>
+                                <RoundedInput 
+                                  type="number" 
+                                  value={editRowData.netAmount || ''} 
+                                  onChange={e => handleRowChange(e, 'netAmount')} 
+                                  placeholder="Total Amount"
+                                  colFonts={colFonts}
+                                  colHeaders={colHeaders}
+                                  allRows={allRows}
+                                  colKey={key}
+                                  i={i}
+                                  style={{ ...inputTheme }}
+                                />
+                                <RoundedDropdown
+                                  value={editRowData.currency || ''}
+                                  onChange={e => handleRowChange(e, 'currency')}
+                                  options={currencyOptions}
+                                  placeholder="Currency"
+                                  style={{ ...inputTheme }}
+                                />
+                              </div>
+                            ) : key === 'destinationShortName' ? (
+                              <RoundedDropdown
+                                value={editRowData.destinationShortName || ''}
+                                onChange={e => handleRowChange(e, 'destinationShortName')}
+                                options={userOptions}
+                                placeholder="Destination"
+                                colFonts={colFonts}
+                                colHeaders={colHeaders}
+                                allRows={allRows}
+                                colKey={key}
+                                i={i}
+                                style={{ ...inputTheme }}
+                              />
+                            ) : (
+                              <RoundedInput
+                                value={editRowData[key] || ''}
+                                onChange={e => handleRowChange(e, key)}
+                                placeholder={colHeaders[i]}
+                                colFonts={colFonts}
+                                colHeaders={colHeaders}
+                                allRows={allRows}
+                                colKey={key}
+                                i={i}
+                                style={{ ...inputTheme }}
+                              />
+                            )}
+                          </td>
+                        ))}
                         <td style={gridTheme.td}>
-                          <RoundedDropdown
-                            value={editRowData.sourceShortName || ''}
-                            onChange={e => handleRowChange(e, 'sourceShortName')}
-                            options={[{ value: '', label: 'Select' }, ...userOptions]}
-                          />
-                        </td>
-                        <td style={gridTheme.td}>
-                          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <RoundedInput type="number" value={editRowData.netAmount || ''} onChange={e => handleRowChange(e, 'netAmount')} style={{ border: '1.5px solid #1976d2' }} placeholder="Total Amount" />
-                            <RoundedDropdown
-                              value={editRowData.currency || ''}
-                              onChange={e => handleRowChange(e, 'currency')}
-                              options={[{ value: '', label: 'Currency' }, ...currencyOptions]}
-                            />
-                          </div>
-                        </td>
-                        <td style={gridTheme.td}>
-                          <RoundedDropdown
-                            value={editRowData.destinationShortName || ''}
-                            onChange={e => handleRowChange(e, 'destinationShortName')}
-                            options={[{ value: '', label: 'Select' }, ...userOptions]}
-                          />
-                        </td>
-                        <td style={{ minWidth: 90 }}>
-                          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
+                          <div style={{ ...FLEX_ROW_CENTER, ...ACTION_BUTTON_CONTAINER_STYLE }}>
                             <ActionButton
                               onClick={() => handleRowSave(idx, s)}
                               type="save"
@@ -423,12 +474,35 @@ function PersonTransactionsPage() {
                       </>
                     ) : (
                       <>
-                        <td style={gridTheme.td}>{(s.sourceShortName || s.sourceUserId) + ' will get'}</td>
+                        {colKeys.map((key, i) => (
+                          <td key={key} style={gridTheme.td}>
+                            {key === 'sourceShortName' ? (
+                              `${s.sourceShortName || s.sourceUserId} will get`
+                            ) : key === 'netAmount' ? (
+                              <span>
+                                {formatCurrencyValue(s.netAmount, s.currency)} 
+                              </span>
+                            ) : key === 'destinationShortName' ? (
+                              `From ${s.destinationShortName || s.destinationUserId}`
+                            ) : (
+                              s[key]
+                            )}
+                          </td>
+                        ))}
                         <td style={gridTheme.td}>
-                          {formatAmount(s.netAmount, s.currency)}{s.currency ? ` ${s.currency}` : ''}
+                          <div style={{ ...FLEX_ROW_CENTER, ...ACTION_BUTTON_CONTAINER_STYLE }}>
+                            <ActionButton
+                              onClick={() => handleRowEdit(idx, s)}
+                              type="edit"
+                              title="Edit"
+                            />
+                            <ActionButton
+                              onClick={() => handleDelete(idx, s)}
+                              type="delete"
+                              title="Delete"
+                            />
+                          </div>
                         </td>
-                        <td style={gridTheme.td}>{'From ' + (s.destinationShortName || s.destinationUserId)}</td>
-                        {/* Remove ActionButtons for summary row view mode */}
                       </>
                     )}
                   </tr>
@@ -438,10 +512,10 @@ function PersonTransactionsPage() {
                         <table style={{ width: '100%', background: 'none', border: 'none' }}>
                           <thead>
                             <tr>
-                              <th style={{ ...gridTheme.th, fontSize: 13 }}>Purpose</th>
-                              <th style={{ ...gridTheme.th, fontSize: 13 }}>Amount</th>
-                              <th style={{ ...gridTheme.th, fontSize: 13 }}>Schedule Date</th>
-                              <th style={{ ...gridTheme.th, fontSize: 13 }}>Status</th>
+                              {detailColHeaders.map((header, idx) => (
+                                <th key={header} style={{ ...gridTheme.th, fontSize: 13 }}>{header}</th>
+                              ))}
+                              <th style={{ ...gridTheme.th, fontSize: 13 }}>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -449,20 +523,51 @@ function PersonTransactionsPage() {
                               <tr key={i}>
                                 {editDetail.idx === idx && editDetail.detailIdx === i ? (
                                   <>
+                                    {detailColKeys.map((key, j) => (
+                                      <td key={key} style={{ ...gridTheme.td, fontSize: 13 }}>
+                                        {key === 'scheduleDate' ? (
+                                          <RoundedInput 
+                                            type="date" 
+                                            value={editDetail.data.scheduleDate ? new Date(editDetail.data.scheduleDate).toISOString().slice(0, 10) : ''} 
+                                            onChange={e => handleDetailChange(e, 'scheduleDate')} 
+                                            placeholder={DETAIL_COLUMNS.placeholders[j]}
+                                            colFonts={detailColFonts}
+                                            colHeaders={detailColHeaders}
+                                            allRows={[]}
+                                            colKey={key}
+                                            i={j}
+                                            style={{ ...inputTheme, fontSize: 13 }} 
+                                          />
+                                        ) : key === 'amount' ? (
+                                          <RoundedInput 
+                                            type="number" 
+                                            value={editDetail.data.amount || ''} 
+                                            onChange={e => handleDetailChange(e, 'amount')} 
+                                            placeholder={DETAIL_COLUMNS.placeholders[j]}
+                                            colFonts={detailColFonts}
+                                            colHeaders={detailColHeaders}
+                                            allRows={[]}
+                                            colKey={key}
+                                            i={j}
+                                            style={{ ...inputTheme, fontSize: 13 }} 
+                                          />
+                                        ) : (
+                                          <RoundedInput 
+                                            value={editDetail.data[key] || ''} 
+                                            onChange={e => handleDetailChange(e, key)} 
+                                            placeholder={DETAIL_COLUMNS.placeholders[j]}
+                                            colFonts={detailColFonts}
+                                            colHeaders={detailColHeaders}
+                                            allRows={[]}
+                                            colKey={key}
+                                            i={j}
+                                            style={{ ...inputTheme, fontSize: 13 }} 
+                                          />
+                                        )}
+                                      </td>
+                                    ))}
                                     <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <RoundedInput value={editDetail.data.purpose || ''} onChange={e => handleDetailChange(e, 'purpose')} placeholder="Purpose" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
-                                    </td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <RoundedInput type="number" value={editDetail.data.amount || ''} onChange={e => handleDetailChange(e, 'amount')} placeholder="Amount" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
-                                    </td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <RoundedInput type="date" value={editDetail.data.scheduleDate ? new Date(editDetail.data.scheduleDate).toISOString().slice(0, 10) : ''} onChange={e => handleDetailChange(e, 'scheduleDate')} placeholder="Schedule Date" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
-                                    </td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>
-                                      <RoundedInput value={editDetail.data.status || ''} onChange={e => handleDetailChange(e, 'status')} placeholder="Status" style={{ border: '1.5px solid #1976d2', fontSize: 13 }} />
-                                    </td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13, minWidth: 70 }}>
-                                      <div style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
+                                      <div style={{ ...FLEX_ROW_CENTER, gap: SPACING.small }}>
                                         <ActionButton
                                           onClick={() => handleDetailSave(idx, s, i)}
                                           type="save"
@@ -478,12 +583,23 @@ function PersonTransactionsPage() {
                                   </>
                                 ) : (
                                   <>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>{d.purpose}</td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>{formatAmount(d.amount, s.currency)}</td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>{d.scheduleDate ? new Date(d.scheduleDate).toLocaleDateString() : ''}</td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>{d.status}</td>
-                                    <td style={{ ...gridTheme.td, fontSize: 13, minWidth: 70 }}>
-                                      <div style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
+                                    {detailColKeys.map((key, j) => (
+                                      <td key={key} style={{ ...gridTheme.td, fontSize: 13 }}>
+                                        {key === 'purpose' ? (
+                                          d.purpose
+                                        ) : key === 'amount' ? (
+                                          formatCurrencyValue(d.amount, s.currency)
+                                        ) : key === 'scheduleDate' ? (
+                                          d.scheduleDate ? new Date(d.scheduleDate).toLocaleDateString() : ''
+                                        ) : key === 'status' ? (
+                                          d.status
+                                        ) : (
+                                          d[key]
+                                        )}
+                                      </td>
+                                    ))}
+                                    <td style={{ ...gridTheme.td, fontSize: 13 }}>
+                                      <div style={{ ...FLEX_ROW_CENTER, gap: SPACING.small }}>
                                         <ActionButton
                                           onClick={() => handleDetailEdit(idx, i, d)}
                                           type="edit"

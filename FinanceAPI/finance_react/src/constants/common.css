@@ -1,0 +1,214 @@
+/* Common CSS classes for shared styling across pages */
+
+/* Layout utilities */
+.page-container {
+  padding: 0;
+  padding-top: 0;
+}
+
+.table-container {
+  width: fit-content;
+  min-width: 0;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.scroll-container {
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Flex utilities */
+.flex-row-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flex-row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Spacing utilities */
+.spacing-small {
+  gap: 4px;
+}
+
+.spacing-medium {
+  gap: 8px;
+}
+
+.spacing-large {
+  gap: 16px;
+}
+
+.spacing-extra-large {
+  gap: 32px;
+}
+
+.margin-top-small {
+  margin-top: 4px;
+}
+
+.margin-top-medium {
+  margin-top: 8px;
+}
+
+.margin-top-large {
+  margin-top: 16px;
+}
+
+.margin-top-extra-large {
+  margin-top: 32px;
+}
+
+.padding-small {
+  padding: 4px;
+}
+
+.padding-medium {
+  padding: 8px;
+}
+
+.padding-large {
+  padding: 16px;
+}
+
+.padding-extra-large {
+  padding: 32px;
+}
+
+/* Action button containers */
+.action-button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  min-width: 90px;
+}
+
+/* Common button styles */
+.transparent-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* Table utilities */
+.table-standard {
+  table-layout: auto;
+  min-width: 900px;
+}
+
+.table-auto-layout {
+  table-layout: auto;
+}
+
+/* Text utilities */
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Width utilities */
+.width-full {
+  width: 100%;
+}
+
+.width-fit {
+  width: fit-content;
+}
+
+.min-width-90 {
+  min-width: 90px;
+}
+
+/* Position utilities */
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+/* Overflow utilities */
+.overflow-visible {
+  overflow: visible;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+/* Z-index utilities */
+.z-index-10 {
+  z-index: 10;
+}
+
+.z-index-20 {
+  z-index: 20;
+}
+
+/* Common form layouts */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Common grid layouts */
+.grid-2-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.grid-3-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .grid-2-columns,
+  .grid-3-columns {
+    grid-template-columns: 1fr;
+  }
+}
