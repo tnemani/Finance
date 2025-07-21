@@ -148,24 +148,6 @@ export default function EarningsPage(props) {
   const userOptions = users.map(u => ({ value: u.id, label: u.shortName || `${u.firstName || ''} ${u.lastName || ''}`.trim() }));
   const getUserLabel = (id) => userOptions.find(u => u.value === id)?.label || id || '';
 
-  // Calculate max width for Sender/Receiver/Owner columns based on all values in the grid
-  const allSenderLabels = [newRow.sender, ...filteredEarnings.map(e => e.sender), editRowData.sender]
-    .map(id => getUserLabel(id || ''));
-  const allReceiverLabels = [newRow.receiver, ...filteredEarnings.map(e => e.receiver), editRowData.receiver]
-    .map(id => getUserLabel(id || ''));
-  const allOwnerLabels = [newRow.ownerId, ...filteredEarnings.map(e => e.ownerId), editRowData.ownerId]
-    .map(id => getUserLabel(id || ''));
-  function getTextWidth(text, font = '16px Arial') {
-    if (typeof document === 'undefined') return 200;
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
-    const context = canvas.getContext('2d');
-    context.font = font;
-    return context.measureText(text).width;
-  }
-  const senderMaxWidth = Math.max(140, ...allSenderLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
-  const receiverMaxWidth = Math.max(140, ...allReceiverLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
-  const ownerMaxWidth = Math.max(140, ...allOwnerLabels.map(l => getTextWidth(l, '16px Arial'))) + 60;
-
   // Get frequency options from constants
   const frequencyComboOptions = getFrequencyTypeOptions();
   
@@ -185,7 +167,7 @@ export default function EarningsPage(props) {
         iconStyle={{ height: 40, display: 'inline-block' }}
       />
       <div style={{ height: 12 }} />
-      <div style={{ width: 'fit-content', minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>
+      <div style={{ width: 'fit-content', margin: '0 auto'}}>
         {/* Set maxHeight to show 20 rows (20 * 40px = 800px) */}
         <div style={{ ...gridTheme.scrollContainer, maxHeight: 800, overflowY: 'auto' }}>
           <table style={gridTheme.table}>
@@ -237,7 +219,6 @@ export default function EarningsPage(props) {
                         options={userOptions}
                         placeholder="Sender"
                         disabled={editRowId !== null}
-                        style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -251,7 +232,6 @@ export default function EarningsPage(props) {
                         options={userOptions}
                         placeholder="Receiver"
                         disabled={editRowId !== null}
-                        style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -265,7 +245,6 @@ export default function EarningsPage(props) {
                         options={userOptions}
                         placeholder="Owner"
                         disabled={editRowId !== null}
-                        style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -376,7 +355,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'sender')}
                             options={userOptions}
                             placeholder="Sender"
-                            style={{ border: '1px solid #1976d2', maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -389,7 +368,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'receiver')}
                             options={userOptions}
                             placeholder="Receiver"
-                            style={{ border: '1px solid #1976d2', maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -402,7 +381,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'ownerId')}
                             options={userOptions}
                             placeholder="Owner"
-                            style={{ border: '1px solid #1976d2', maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}

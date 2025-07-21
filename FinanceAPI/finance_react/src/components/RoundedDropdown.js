@@ -5,21 +5,73 @@ import { DROPDOWN_MIN_WIDTH } from '../constants/ui';
 import './RoundedDropdown.css';
 import { getTextWidth } from '../helpers/Helper';
 
-function RoundedDropdown({ options = [], value, onChange, style = {}, placeholder = '', customWidth = 40, ...props }) {
+function RoundedDropdown({ options = [], value, onChange, style = {}, placeholder = '', customWidth = 40, colFonts, colHeaders, allRows, colKey, i, ...props }) {
   const [showList, setShowList] = useState(false);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
-  const [maxWidth, setMaxWidth] = useState(200);
+  const [inputWidth, setInputWidth] = useState(200);
+  const [listWidth, setListWidth] = useState(200);
   const [inputValue, setInputValue] = useState(value == null ? '' : String(value));
   const wrapperRef = useRef(null);
   const displayRef = useRef(null);
 
   const font = (style.fontSize ? `${style.fontSize}px` : '16px') + ' Arial';
+  
   useLayoutEffect(() => {
-    const widths = options.map(opt => getTextWidth((opt.label ?? opt).toString(), font));
-    const widest = Math.max(80, ...widths) + 0; // 70px for arrow and padding
-    setMaxWidth(widest);
-  }, [options, font]);
-  const width = style.width || maxWidth;
+    // Calculate dropdown list width based on longest option
+    const optionItemsLengths = options.map(opt => getTextWidth((opt.label ?? opt).toString(), font));
+    const paddingBuffer = 12 + 12; // left + right padding in item
+    const longestOptionWidth = Math.max(80, ...optionItemsLengths);
+    const calculatedListWidth = longestOptionWidth + paddingBuffer;
+    setListWidth(calculatedListWidth);
+
+    // Calculate input width - prioritize grid data over dropdown options
+    let calculatedInputWidth = customWidth;
+    
+    // Get placeholder width
+    const placeholderWidth = getTextWidth(placeholder, font);
+    
+    // Get current selected value width
+    const currentValueText = options.find(opt => (opt.value ?? opt) === value)?.label ?? 
+                            options.find(opt => (opt.value ?? opt) === value) ?? 
+                            (value ? String(value) : '');
+    const currentValueWidth = getTextWidth(currentValueText, font);
+    
+    // Get longest grid item width for this column (HIGHEST PRIORITY)
+    let longestGridItemWidth = 80; // minimum width
+    if (allRows && colKey && Array.isArray(allRows)) {
+      const gridItemLengths = allRows.map(row => {
+        let cellValue = row && row[colKey] ? String(row[colKey]) : '';
+        
+        // For any dropdown column, convert value to display name for width calculation
+        if (options && options.length > 0) {
+          const matchingOption = options.find(opt => 
+            opt.value?.toString() === cellValue?.toString() || 
+            opt.value === cellValue
+          );
+          if (matchingOption && matchingOption.label) {
+            cellValue = matchingOption.label;
+          }
+        }
+        
+        return getTextWidth(cellValue, font);
+      });
+      longestGridItemWidth = Math.max(longestGridItemWidth, ...gridItemLengths);
+    }
+    
+    // For input width calculation, use only:
+    // 1. Grid data (actual values in the column)
+    // 2. Current selected value
+    // 3. Placeholder
+    // Never use dropdown options for input width calculation
+    const maxContentWidth = Math.max(placeholderWidth, currentValueWidth, longestGridItemWidth);
+    
+    // Input width calculation
+    const arrowBuffer = 20; // space for dropdown arrow
+    const inputPaddingBuffer = 40; // left + right padding
+    calculatedInputWidth = maxContentWidth + inputPaddingBuffer + arrowBuffer;
+    
+    setInputWidth(calculatedInputWidth);
+  }, [options, font, placeholder, allRows, colKey, customWidth, value]);
 
   const mergedStyle = { ...inputTheme, ...style };
 
@@ -68,15 +120,6 @@ function RoundedDropdown({ options = [], value, onChange, style = {}, placeholde
     else setHighlightedIdx(-1);
   }, [showList, options, value]);
 
-  const paddingBuffer = 12 + 12;   // left + right padding in item
-  const arrowBuffer = 20;          // space for dropdown arrow
-  const longestOptionWidth = Math.max(...options.map(opt =>
-    getTextWidth((opt.label ?? opt).toString(), font)
-  ));
-
-const finalWidth =  Math.max(customWidth, longestOptionWidth + paddingBuffer + arrowBuffer)+ 15;
-
-
   const handleSelect = val => {
     setInputValue(val);
     if (onChange) onChange({ target: { value: val } });
@@ -87,7 +130,7 @@ const finalWidth =  Math.max(customWidth, longestOptionWidth + paddingBuffer + a
     <div
       className="roundedDropdown custom"
       ref={wrapperRef}
-      style={{ ...mergedStyle, width: finalWidth, position: 'relative' }}
+      style={{ ...mergedStyle, width: inputWidth, position: 'relative' }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
@@ -95,7 +138,7 @@ const finalWidth =  Math.max(customWidth, longestOptionWidth + paddingBuffer + a
         className="roundedDropdown-display"
         ref={displayRef}
         onClick={() => setShowList(v => !v)}
-        style={{ minWidth: finalWidth, maxWidth: finalWidth, width: finalWidth, cursor: 'pointer', height: inputTheme.height }}
+        style={{ minWidth: inputWidth, maxWidth: inputWidth, width: inputWidth, cursor: 'pointer', height: inputTheme.height }}
       >
         <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {options.find(opt => (opt.value ?? opt) === value)?.label ?? options.find(opt => (opt.value ?? opt) === value) ?? placeholder}
@@ -108,7 +151,7 @@ const finalWidth =  Math.max(customWidth, longestOptionWidth + paddingBuffer + a
       </div>
       {showList && options.length > 0 && (
     <DropdownPortal anchorRef={displayRef}>
-    <div className="roundedDropdown-list" style={{ width: finalWidth, cursor: 'pointer'}}>
+    <div className="roundedDropdown-list" style={{ width: listWidth, cursor: 'pointer'}}>
     <div className="roundedDropdown-scrollable">
       <ul style={{ margin: 0, padding: 0 }}>
         {options.map((opt, idx) => (

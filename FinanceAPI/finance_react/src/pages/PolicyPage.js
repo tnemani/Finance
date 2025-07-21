@@ -254,8 +254,8 @@ function PolicyPage() {
                         type="date"
                         value={addRow.startDate}
                         onChange={e => setAddRow({ ...addRow, startDate: e.target.value })}
-                        placeholder={colHeaders[i]}
-                        style={{ maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i), borderRadius: 12 }}
+                        placeholder="Start Date"
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -350,7 +350,8 @@ function PolicyPage() {
                             type="date"
                             value={editRow.startDate}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
-                            style={{ border: '1px solid #1976d2', maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i), borderRadius: 12 }}
+                            placeholder="Start Date"
+                            style={{ border: '1px solid #1976d2', width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}

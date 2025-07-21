@@ -160,11 +160,10 @@ function StudentGetPage() {
       const cellWidths = allRows.map(row => getTextWidth((row && row.qty) ? String(row.qty) : '', '16px Arial'));
       return Math.max(headerWidth, ...cellWidths, 80) + 40;
     } else if (key === 'userShortName') {
-      // Expand user cell to fit dropdown comfortably
+      // Match PolicyPage pattern - no extra padding
       const headerWidth = getTextWidth(header, '16px Arial');
       const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
-      // Add extra width for dropdown arrow and padding
-      return Math.max(headerWidth, ...cellWidths, 120) + 80;
+      return Math.max(headerWidth, ...cellWidths, 120);
     } else {
       const headerWidth = getTextWidth(header, '16px Arial');
       const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
@@ -226,13 +225,12 @@ function StudentGetPage() {
                       />
                     </td>
                   ) : key === 'userShortName' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td }}>
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
                         options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
                         placeholder="User"
-                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -284,7 +282,7 @@ function StudentGetPage() {
                       />
                     </td>
                   ) : (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td }}>
                       <RoundedInput 
                         value={addRow[key]} 
                         onChange={e => setAddRow({ ...addRow, [key]: e.target.value })} 
@@ -312,7 +310,7 @@ function StudentGetPage() {
                   if (editIdx === idx) {
                     if (key === 'qtyCurrency') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           <RoundedInput 
                             value={editRow.qty} 
                             onChange={e => setEditRow({ ...editRow, qty: e.target.value })} 
@@ -328,7 +326,7 @@ function StudentGetPage() {
                       );
                     } else if (key === 'userShortName') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           <RoundedDropdown
                             value={editRow.userShortName}
                             onChange={e => {
@@ -342,7 +340,7 @@ function StudentGetPage() {
                             }}
                             options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
                             placeholder="User"
-                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -353,7 +351,7 @@ function StudentGetPage() {
                       );
                     } else if (key === 'currency') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td}}>
                           <RoundedDropdown
                             value={editRow.currency}
                             onChange={e => setEditRow({ ...editRow, currency: e.target.value })}
@@ -377,19 +375,19 @@ function StudentGetPage() {
                       let currency = editRow.currency;
                       const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
                     } else if (key === 'startDate') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td}}>
                           <RoundedInput
                             type="date"
                             value={editRow.startDate || ''}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
                             placeholder="Start Date"
-                            style={{ border: '1px solid #1976d2', width: '100%',  maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2'}}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -400,11 +398,11 @@ function StudentGetPage() {
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           <RoundedInput 
                             value={editRow[key]} 
                             onChange={e => setEditRow({ ...editRow, [key]: e.target.value })} 
-                            style={{ border: '1px solid #1976d2', maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -418,7 +416,7 @@ function StudentGetPage() {
                     if (key === 'qtyCurrency') {
                       // Always show the quantity value in view mode
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i), textAlign: 'left' }}>
+                        <td key={key} style={{ ...gridTheme.td, textAlign: 'left' }}>
                           <span style={{ textAlign: 'left', font: columnFonts[i] }}>{s.qty}</span>
                         </td>
                       );
@@ -431,7 +429,7 @@ function StudentGetPage() {
                       let currency = s.currency;
                       const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
@@ -448,7 +446,7 @@ function StudentGetPage() {
                         }
                       }
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{formatted}</td>
+                        <td key={key} style={{ ...gridTheme.td }}>{formatted}</td>
                       );
                     } else if (key === 'userShortName') {
                       return (
@@ -464,7 +462,7 @@ function StudentGetPage() {
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{s[key]}</td>
+                        <td key={key} style={{ ...gridTheme.td }}>{s[key]}</td>
                       );
                     }
                   }

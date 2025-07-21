@@ -9,7 +9,7 @@ import RoundedDropdown from '../components/RoundedDropdown';
 import diamondIcon from '../components/icons/diamond.png';
 import { inputTheme } from '../components/inputTheme';
 import { currencyOptions, getWeightOptions } from '../constants/Fixedlist';
-import { formatDateMDY } from '../helpers/Helper';
+import { formatMonthDayYear } from '../helpers/Helper';
 import {formatCurrencyValue} from '../helpers/Helper';
 import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
 
@@ -386,7 +386,7 @@ export default function DiamondPage() {
                       <td key={key} style={{ ...gridTheme.td}}>
                         {
                           key === 'purchasedDate'
-                            ? formatDateMDY(row[key])
+                            ? formatMonthDayYear(row[key])
                             : key === 'units'
                               ? row['weightUnits']
                               : key === 'owner'

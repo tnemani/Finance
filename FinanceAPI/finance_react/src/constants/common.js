@@ -179,3 +179,4 @@ export const createColumnFonts = (columnCount, fontSize = '16px') => {
 export const createAllRows = (newRow, filteredItems, editRowData) => {
   return [newRow, ...filteredItems, editRowData];
 };
+

@@ -31,12 +31,6 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
   return Math.max(headerWidth, ...cellWidths, placeholderWidth) + 24; // 24px for padding/buffer
 }
 
- export function formatDateMDY(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr;
-    return d.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-  }
 
   
     // Helper to format date as 'Month Day Year'
@@ -202,4 +196,10 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
     
     // Default: append unit as suffix
     return `${finalValue} ${units}`;
+  }
+
+  export function getColWidth(key, header, allRows) {
+      const headerWidth = getTextWidth(header, '16px Arial');
+      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
+      return Math.max(headerWidth, ...cellWidths, 80) + 40;
   }

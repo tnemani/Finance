@@ -10,6 +10,7 @@ import RoundedDropdown from '../components/RoundedDropdown';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
 import { currencyOptions } from '../constants/Fixedlist';
 import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+import { getTextWidth, getColWidth } from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -151,41 +152,6 @@ function StockPage() {
   const columnFonts = createColumnFonts(colKeys.length);
   const allRows = createAllRows(addRow, filteredStocks, editRow);
 
-  function getTextWidth(text, font = '16px Arial') {
-    if (typeof document === 'undefined') return 200;
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
-    const context = canvas.getContext('2d');
-    context.font = font;
-    return context.measureText(text).width;
-  }
-
-  // Calculate column widths based on content
-  function getColWidth(key, header, index) {
-    if (key === 'qty') {
-      const headerWidth = getTextWidth(header, '16px Arial');
-      const cellWidths = allRows.map(row => getTextWidth((row && row.qty) ? String(row.qty) : '', '16px Arial'));
-      return Math.max(headerWidth, ...cellWidths, 80) + 40;
-    } else if (key === 'userShortName') {
-      const headerWidth = getTextWidth(header, '16px Arial');
-      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
-      return Math.max(headerWidth, ...cellWidths, 120) + 80;
-    } else {
-      const headerWidth = getTextWidth(header, '16px Arial');
-      const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
-      return Math.max(headerWidth, ...cellWidths, 80) + 40;
-    }
-  }
-
-  const handleUndo = () => {
-    if (undoRow) {
-      axios.post(API_URL, undoRow).then(() => {
-        setUndoRow(null);
-        setUndoIdx(null);
-        fetchStocks();
-      });
-    }
-  };
-
   // Utility: find value for a symbol by matching substring (case-insensitive)
   function getValueForSymbol(symbol) {
     if (!symbol) return 0;
@@ -234,7 +200,7 @@ function StockPage() {
             <thead>
               <tr>
                 {colHeaders.map((header, i) => (
-                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'normal', maxWidth: getColWidth(colKeys[i], header, i),  width: getColWidth(colKeys[i], header, i), textAlign: 'left', fontWeight: 600, fontSize: 16 }}>{header}</th>
+                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'normal', maxWidth: getColWidth(colKeys[i], header, allRows),  width: getColWidth(colKeys[i], header, allRows), textAlign: 'left', fontWeight: 600, fontSize: 16 }}>{header}</th>
                 ))}
                 <th style={{ ...gridTheme.th, whiteSpace: 'nowrap' }}></th>
               </tr>
@@ -244,12 +210,12 @@ function StockPage() {
               <tr>
                 {colKeys.map((key, i) => (
                   key === 'qty' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i), paddingRight: 8, whiteSpace: 'normal' }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows),  width: getColWidth(key, colHeaders[i], allRows), paddingRight: 8, whiteSpace: 'normal' }}>
                       <RoundedInput
                         value={addRow.qty}
                         onChange={e => setAddRow({ ...addRow, qty: e.target.value })}
                         placeholder="Quantity"
-                        style={{ width: '100%',  maxWidth: getColWidth(key, colHeaders[i], i), textAlign: 'left' }}
+                        style={{ width: '100%',  maxWidth: getColWidth(key, colHeaders[i], allRows), textAlign: 'left' }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -258,13 +224,12 @@ function StockPage() {
                       />
                     </td>
                   ) : key === 'userShortName' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td }}>
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
                         options={userOptions}
                         placeholder="User"
-                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -273,13 +238,13 @@ function StockPage() {
                       />
                     </td>
                   ) : key === 'currency' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                       <RoundedDropdown
                         value={addRow.currency}
                         onChange={e => setAddRow({ ...addRow, currency: e.target.value })}
                         options={currencyOptions}
                         placeholder="Currency"
-                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], allRows) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -288,7 +253,7 @@ function StockPage() {
                       />
                     </td>
                   ) : key === 'currentValue' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                       {/* Show current value for add row */}
                       {(() => {
                         const symbol = addRow.symbol;
@@ -301,13 +266,13 @@ function StockPage() {
                       })()}
                     </td>
                   ) : key === 'startDate' ? (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                       <RoundedInput
                         type="date"
                         value={addRow.startDate || ''}
                         onChange={e => setAddRow({ ...addRow, startDate: e.target.value })}
                         placeholder="Start Date"
-                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], allRows) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -316,12 +281,12 @@ function StockPage() {
                       />
                     </td>
                   ) : (
-                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                    <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                       <RoundedInput 
                         value={addRow[key]} 
                         onChange={e => setAddRow({ ...addRow, [key]: e.target.value })} 
                         placeholder={colHeaders[i]} 
-                        style={{ maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}
+                        style={{ maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
@@ -344,7 +309,7 @@ function StockPage() {
                   if (editIdx === idx) {
                     if (key === 'qty') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           <RoundedInput 
                             value={editRow.qty} 
                             onChange={e => setEditRow({ ...editRow, qty: e.target.value })} 
@@ -360,7 +325,7 @@ function StockPage() {
                       );
                     } else if (key === 'userShortName') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td }}>
                           <RoundedDropdown
                             value={editRow.userShortName}
                             onChange={e => {
@@ -374,7 +339,7 @@ function StockPage() {
                             }}
                             options={userOptions}
                             placeholder="User"
-                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -385,13 +350,13 @@ function StockPage() {
                       );
                     } else if (key === 'currency') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           <RoundedDropdown
                             value={editRow.currency}
                             onChange={e => setEditRow({ ...editRow, currency: e.target.value })}
                             options={currencyOptions}
                             placeholder="Currency"
-                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], allRows) }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -409,19 +374,19 @@ function StockPage() {
                       let currency = editRow.currency;
                       const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
                     } else if (key === 'startDate') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           <RoundedInput
                             type="date"
                             value={editRow.startDate || ''}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
                             placeholder="Start Date"
-                            style={{ border: '1px solid #1976d2', width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2', width: '100%', maxWidth: getColWidth(key, colHeaders[i], allRows) }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -432,11 +397,11 @@ function StockPage() {
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           <RoundedInput 
                             value={editRow[key]} 
                             onChange={e => setEditRow({ ...editRow, [key]: e.target.value })} 
-                            style={{ border: '1px solid #1976d2', maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}
+                            style={{ border: '1px solid #1976d2', maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -456,7 +421,7 @@ function StockPage() {
                       let currency = s.currency;
                       const formattedValue = formatCurrencyValue(value, currency);
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           {formattedValue ? `${formattedValue}` : ''}
                         </td>
                       );
@@ -473,19 +438,19 @@ function StockPage() {
                         }
                       }
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>{formatted}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>{formatted}</td>
                       );
                     } else if (key === 'qty') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>{s.qty}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>{s.qty}</td>
                       );
                     } else if (key === 'currency') {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>{getCurrencyDisplayLabel(s.currency)}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>{getCurrencyDisplayLabel(s.currency)}</td>
                       );
                     } else {
                       return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i), width: getColWidth(key, colHeaders[i], i) }}>{s[key]}</td>
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>{s[key]}</td>
                       );
                     }
                   }
