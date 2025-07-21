@@ -9,7 +9,7 @@ import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
 import { currencyOptions } from '../constants/Fixedlist';
-import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+import { formatCurrencyValue, getCurrencyDisplayLabel, formatMonthDayYear } from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -403,19 +403,8 @@ function PolicyPage() {
                         </td>
                       );
                     } else if (key === 'startDate') {
-                      // Format date as 'Month Date, yyyy'
-                      let formatted = '';
-                      if (s[key]) {
-                        const d = new Date(s[key]);
-                        if (!isNaN(d)) {
-                          const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                          formatted = d.toLocaleDateString('en-US', options);
-                        } else {
-                          formatted = s[key];
-                        }
-                      }
-                      return (
-                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{formatted}</td>
+                     return (
+                        <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], i),  width: getColWidth(key, colHeaders[i], i) }}>{formatMonthDayYear(s[key])}</td>
                       );
                     } else if (key === 'currency') {
                       return (

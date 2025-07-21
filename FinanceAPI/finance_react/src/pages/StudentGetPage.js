@@ -9,7 +9,7 @@ import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
 import { currencyOptions } from '../constants/Fixedlist';
-import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+import { formatCurrencyValue, getCurrencyDisplayLabel, formatMonthDayYear } from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -434,19 +434,8 @@ function StudentGetPage() {
                         </td>
                       );
                     } else if (key === 'startDate') {
-                      // Format date as 'Month Date, yyyy'
-                      let formatted = '';
-                      if (s[key]) {
-                        const d = new Date(s[key]);
-                        if (!isNaN(d)) {
-                          const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                          formatted = d.toLocaleDateString('en-US', options);
-                        } else {
-                          formatted = s[key];
-                        }
-                      }
                       return (
-                        <td key={key} style={{ ...gridTheme.td }}>{formatted}</td>
+                        <td key={key} style={{ ...gridTheme.td }}>{formatMonthDayYear(s[key])}</td>
                       );
                     } else if (key === 'userShortName') {
                       return (

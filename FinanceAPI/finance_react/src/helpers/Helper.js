@@ -36,12 +36,24 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
     // Helper to format date as 'Month Day Year'
    export function formatMonthDayYear(dateStr) {
       if (!dateStr) return '';
-      const date = new Date(dateStr + 'T00:00:00');
+      
+      // Handle different date formats
+      let date;
+      if (dateStr.includes('T')) {
+        // Already has time component, use as-is
+        date = new Date(dateStr);
+      } else {
+        // Date only, add time component to avoid timezone issues
+        date = new Date(dateStr + 'T00:00:00');
+      }
+      
       if (isNaN(date)) return dateStr;
-      const month = date.toLocaleString('en-US', { month: 'short' });
-      const day = date.getDate();
-      const year = date.getFullYear();
-      return `${month} ${day} ${year}`;
+      
+      // Use UTC methods to avoid timezone conversion issues
+      const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+      const day = date.getUTCDate();
+      const year = date.getUTCFullYear();
+      return `${month} ${day}, ${year}`;
     }
   
     // Helper to format phone numbers

@@ -7,7 +7,7 @@ import { gridTheme } from '../components/gridTheme';
 import { currencyOptions, getEarningsTypeOptions, getFrequencyTypeOptions } from '../constants/Fixedlist';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
-import {formatCurrencyValue} from '../helpers/Helper';
+import {formatCurrencyValue, formatMonthDayYear} from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -136,13 +136,6 @@ export default function EarningsPage(props) {
   const allRows = createAllRows(newRow, filteredEarnings, editRowData);
 
 
-  // Format date as 'Month Date, yyyy'
-  const formatDisplayDate = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
 
   // User dropdown options
   const userOptions = users.map(u => ({ value: u.id, label: u.shortName || `${u.firstName || ''} ${u.lastName || ''}`.trim() }));
@@ -441,7 +434,7 @@ export default function EarningsPage(props) {
                         ) : key === 'frequency' ? (
                           earning.frequency
                         ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
-                          formatDisplayDate(earning[key])
+                          formatMonthDayYear(earning[key])
                         ) : key === 'sender' ? (
                           getUserLabel(earning.sender)
                         ) : key === 'receiver' ? (
