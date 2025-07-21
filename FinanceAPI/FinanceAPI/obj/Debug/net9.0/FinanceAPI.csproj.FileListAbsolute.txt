@@ -149,6 +149,7 @@ C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\FinanceAPI.csproj.CoreCompileInputs.cache
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\FinanceAPI.MvcApplicationPartsAssemblyInfo.cs
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\FinanceAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\FinanceAPI.sourcelink.json
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\rjimswa.dswa.cache.json
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
 C:\Trinadh\Personal\Budget\GithubCoPilot\FinanceAPI\FinanceAPI\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json

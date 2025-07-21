@@ -27,10 +27,10 @@ const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/ap
 
 // Column definitions for consistent use
 const ADDRESS_COLUMNS = {
-  keys: ['addressType', 'houseNo', 'line1', 'line2', 'city', 'state', 'country', 'zip', 'description'],
-  headers: ['Address Type', 'House No', 'Line 1', 'Line 2', 'City', 'State', 'Country', 'Zip', 'Description'],
-  types: ['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text'],
-  placeholders: ['e.g. Home, Office', 'House/Flat No', 'Street/Area', 'Landmark/Locality', 'City', 'State', 'Country', 'Postal Code', 'Description (optional)']
+  keys: ['addressType', 'houseNo', 'line1', 'line2', 'city', 'state', 'country', 'zip', 'shortName', 'description'],
+  headers: ['Address Type', 'House No', 'Line 1', 'Line 2', 'City', 'State', 'Country', 'Zip', 'Short Name', 'Description'],
+  types: ['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text'],
+  placeholders: ['e.g. Home, Office', 'House/Flat No', 'Street/Area', 'Landmark/Locality', 'City', 'State', 'Country', 'Postal Code', 'Short Name', 'Description (optional)']
 };
 
 function AddressesPage() {

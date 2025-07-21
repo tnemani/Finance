@@ -23,15 +23,40 @@ export const currencyOptionsWithStock = [
 // Helper to get weight units for dropdowns
 export function getWeightOptions() {
   return [
-    { value: 'mg', label: 'Milligrams (mg)' },
-    { value: 'gm', label: 'Grams (gm)' },
-    { value: 'kg', label: 'Kilograms (kg)' },
-    { value: 'oz', label: 'Ounce (oz)' },
-    { value: 'oz t', label: 'Troy Ounce (oz t)' },
-    { value: 'lb', label: 'Pounds (lb)' },
-    { value: 'ct', label: 'Carat (ct)' }
+    { value: 'Milligrams (mg)', label: 'Milligrams (mg)' },
+    { value: 'Grams (gm)', label: 'Grams (gm)' },
+    { value: 'Kilograms (kg)', label: 'Kilograms (kg)' },
+    { value: 'Ounce (oz)', label: 'Ounce (oz)' },
+    { value: 'Troy Ounce (oz t)', label: 'Troy Ounce (oz t)' },
+    { value: 'Pounds (lb)', label: 'Pounds (lb)' },
+    { value: 'Carat (ct)', label: 'Carat (ct)' }
   ];
 }
+
+
+export function getTimeUnitOptions() {
+  return [
+  { value: 'hr(s)', label: 'Hour (hr)' },
+  { value: 'day(s)', label: 'Day (day)' },
+  { value: 'month(s)', label: 'Month (month)' },
+  { value: 'year(s)', label: 'Year (year)' }
+];
+}
+
+// Add-on options
+const miscelaniousOptions = [{ value: 'Percentage', label: 'Percentage (%)' },{ value: 'Piece(s)', label: 'piece (Pieces)' }];
+
+// Compose without duplicates
+export function getUnitOptions() {
+  return [
+    ...currencyOptions,
+    ...getWeightOptions(),
+    ...getTimeUnitOptions(),
+    ...miscelaniousOptions
+  ];
+}
+
+
 
 // Helper to get user group options for dropdowns
 export function getUserGroupOptions() {
@@ -52,7 +77,7 @@ export function getUserGroupOptions() {
 export function getAddressTypeOptions() {
   return [
     { value: 'Apartment (Flat)', label: 'Apartment (Flat)' },
-    { value: 'Business (Office)', label: 'Business' },
+    { value: 'Business', label: 'Business' },
     { value: 'Garden', label: 'Garden' },
     { value: 'Home', label: 'Home' },
     { value: 'Plot (Site)', label: 'Plot (Site)' },
@@ -81,3 +106,4 @@ export function getFrequencyTypeOptions() {
     { value: 'Yearly', label: 'Yearly' }
   ];
 }
+

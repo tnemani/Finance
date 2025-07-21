@@ -65,7 +65,8 @@ public class AddressesController : ControllerBase
             State = dto.State?.Trim(),
             Country = dto.Country?.Trim(),
             Zip = dto.Zip?.Trim(),
-            Description = dto.Description?.Trim()
+            Description = dto.Description?.Trim(),
+            ShortName = dto.ShortName?.Trim()
         };
         _context.Addresses.Add(address);
         _context.SaveChanges();
@@ -87,6 +88,7 @@ public class AddressesController : ControllerBase
         address.Country = dto.Country?.Trim();
         address.Zip = dto.Zip?.Trim();
         address.Description = dto.Description?.Trim();
+        address.ShortName = dto.ShortName?.Trim();
         _context.SaveChanges();
         return NoContent();
     }

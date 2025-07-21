@@ -3,11 +3,27 @@ import axios from 'axios';
 import { ActionButton } from '../components/ActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import GridBanner from '../components/GridBanner';
+import RoundedInput from '../components/RoundedInput';
+import RoundedDropdown from '../components/RoundedDropdown';
 import paymentIcon from '../components/icons/settings_banner.png';
 import { gridTheme } from '../components/gridTheme';
-import RoundedDropdown from '../components/RoundedDropdown';
+import { inputTheme } from '../components/inputTheme';
+import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
+import { getUnitOptions } from '../constants/Fixedlist';
+import { formatValueWithUnit } from '../helpers/Helper';
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/settings';
+
+// Column definitions for consistent use
+const SETTINGS_COLUMNS = {
+  keys: ['key', 'value', 'description'],
+  headers: ['Key', 'Value & Units', 'Description'],
+  types: ['text', 'text', 'text'],
+  placeholders: ['Setting Key', 'Setting Value', 'Description']
+};
+
+// Predefined unit options to avoid hardcoding
+
 
 function SettingsPage() {
   const [settings, setSettings] = useState([]);
@@ -17,6 +33,10 @@ function SettingsPage() {
   const [confirm, setConfirm] = useState({ open: false, message: '', onConfirm: null });
   const [searchText, setSearchText] = useState('');
   const [filteredSettings, setFilteredSettings] = useState([]);
+
+  // Column definitions for consistent styling
+  const allRows = [newRow, ...filteredSettings, editRowData];
+  const colFonts = Array(SETTINGS_COLUMNS.keys.length).fill('16px Arial');
 
   useEffect(() => { fetchSettings(); }, []);
 
@@ -50,10 +70,14 @@ function SettingsPage() {
       message: 'Are you sure you want to update this setting?',
       onConfirm: async () => {
         setConfirm({ open: false });
-        await axios.put(`${API_URL}/${id}`, editRowData);
-        setEditRowId(null);
-        setEditRowData({});
-        fetchSettings();
+        try {
+          await axios.put(`${API_URL}/${id}`, editRowData);
+          setEditRowId(null);
+          setEditRowData({});
+          await fetchSettings();
+        } catch (err) {
+          alert('Failed to update setting. Please check your input and try again.');
+        }
       }
     });
   };
@@ -69,8 +93,12 @@ function SettingsPage() {
       message: 'Are you sure you want to delete this setting?',
       onConfirm: async () => {
         setConfirm({ open: false });
-        await axios.delete(`${API_URL}/${id}`);
-        fetchSettings();
+        try {
+          await axios.delete(`${API_URL}/${id}`);
+          await fetchSettings();
+        } catch (err) {
+          alert('Failed to delete setting. Please try again.');
+        }
       }
     });
   };
@@ -82,19 +110,20 @@ function SettingsPage() {
       message: 'Are you sure you want to add this setting?',
       onConfirm: async () => {
         setConfirm({ open: false });
-        await axios.post(API_URL, newRow);
-        setNewRow({});
-        fetchSettings();
+        try {
+          await axios.post(API_URL, newRow);
+          setNewRow({});
+          await fetchSettings();
+        } catch (err) {
+          alert('Failed to add setting. Please check your input and try again.');
+        }
       }
     });
   };
 
-  // Helper to format value in UK format
-  const formatValueUK = (value) => {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    if (isNaN(num)) return value;
-    return num.toLocaleString('en-GB', { maximumFractionDigits: 2 });
+  const handleReset = () => {
+    setNewRow({});
+    setSearchText('');
   };
 
   // Helper to format value in Indian (lakh/crore) format and truncate .00
@@ -112,163 +141,171 @@ function SettingsPage() {
     return formatted + '.' + decPart;
   };
 
-  // Get unique units from settings
-  const unitOptions = Array.from(new Set(settings.map(s => s.units).filter(Boolean)));
-  const unitOptionsList = [
-    '',
-    '$',
-    'Rs',
-    '%',
-    'gms',
-    'kg',
-    'litre',
-    'piece',
-    'hour',
-    'day',
-    'month',
-    'year'
-  ];
+  const unitOptions = getUnitOptions();
 
   return (
-    <div style={{ padding: 20, paddingTop: 0 }}>
+    <div style={{ padding: 0, paddingTop: 0 }}>
+      <ConfirmModal 
+        open={confirm.open} 
+        message={confirm.message} 
+        onConfirm={confirm.onConfirm} 
+        onCancel={() => setConfirm({ open: false })} 
+      />
       <GridBanner
         icon={paymentIcon}
         title="Settings"
         searchText={searchText}
         setSearchText={setSearchText}
         placeholder="Search settings..."
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', textAlign: 'left', width: '100%' }}
-        titleStyle={{ fontSize: 28, fontWeight: 600, marginLeft: 12, textAlign: 'left', display: 'inline-block' }}
-        iconStyle={{ height: 40, display: 'inline-block' }}
       />
-      <div style={{ height: 12 }} />
+      <div style={{ height: 16 }} />
       <div style={{ width: 'fit-content', minWidth: 0, margin: '0 auto', maxWidth: '100%' }}>
-        {/* Set maxHeight to show 20 rows (20 * 40px = 800px) */}
-        <div style={{ ...gridTheme.scrollContainer, maxHeight: 800, overflowY: 'auto' }}>
-          <table style={gridTheme.table}>
+        <div style={{
+          ...gridTheme.scrollContainer,
+          maxHeight: 600,
+          minHeight: 0,
+          overflowY: 'auto',
+        }}>
+          <table style={{ ...gridTheme.table, tableLayout: 'auto', minWidth: 800 }}>
             <thead>
               <tr>
-                <th style={gridTheme.th}>Key</th>
-                <th style={gridTheme.th}>Value</th>
-                <th style={gridTheme.th}>Units</th>
-                <th style={gridTheme.th}>Description</th>
-                <th style={gridTheme.th}></th>
+                {SETTINGS_COLUMNS.headers.map((header, i) => (
+                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'normal' }}>{header}</th>
+                ))}
+                <th style={{ ...gridTheme.th, whiteSpace: 'nowrap' }}></th>
               </tr>
             </thead>
             <tbody>
-              {/* Add row for new setting */}
               <tr>
-                <td style={gridTheme.td}>
-                  <input type="text" value={newRow.key || ''} onChange={e => setNewRow({ ...newRow, key: e.target.value })} placeholder="Key" style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <input type="text" value={newRow.value || ''} onChange={e => setNewRow({ ...newRow, value: e.target.value })} placeholder="Value" style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <RoundedDropdown
-                    value={newRow.units || ''}
-                    onChange={e => setNewRow({ ...newRow, units: e.target.value })}
-                    options={unitOptionsList.map(opt => ({ value: opt, label: opt ? opt : 'Select' }))}
-                    placeholder="Units"
-                    style={{ width: '100%' }}
-                    disabled={editRowId !== null}
-                  />
-                </td>
-                <td style={gridTheme.td}>
-                  <input type="text" value={newRow.description || ''} onChange={e => setNewRow({ ...newRow, description: e.target.value })} placeholder="Description" style={{ border: 'none', borderRadius: 0, padding: '4px 8px', outline: 'none', fontSize: '1em', background: 'transparent', minHeight: 28, margin: 0, boxSizing: 'border-box', width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} disabled={editRowId !== null} />
-                </td>
-                <td style={gridTheme.td}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
-                    <ActionButton
-                      onClick={handleAdd}
-                      disabled={editRowId !== null}
-                      type="save"
-                      title="Save"
-                    />
-                    <ActionButton
-                      onClick={() => setNewRow({})}
-                      disabled={editRowId !== null}
-                      type="reset"
-                      title="Reset"
-                    />
+                {SETTINGS_COLUMNS.keys.map((key, i) => (
+                  <td key={key} style={{
+                    ...gridTheme.td,
+                    ...(key === 'value' ? { position: 'relative', zIndex: 10, overflow: 'visible' } : {})
+                  }}>
+                    {key === 'value' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <RoundedInput
+                          value={newRow[key] || ''}
+                          onChange={e => setNewRow({ ...newRow, [key]: e.target.value })}
+                          placeholder="Value"
+                          type="text"
+                          colFonts={colFonts}
+                          colHeaders={SETTINGS_COLUMNS.headers}
+                          allRows={allRows}
+                          colKey={key}
+                          i={i}
+                          style={{ ...inputTheme }}
+                          disabled={editRowId !== null}
+                        />
+                        <RoundedDropdown
+                          options={unitOptions}
+                          value={newRow['units'] || ''}
+                          onChange={e => setNewRow({ ...newRow, units: e.target.value })}
+                          placeholder="Units"
+                          style={{ ...inputTheme }}
+                          disabled={editRowId !== null}
+                        />
+                      </div>
+                    ) : (
+                      <RoundedInput
+                        value={newRow[key] || ''}
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })}
+                        placeholder={SETTINGS_COLUMNS.placeholders[i]}
+                        type={SETTINGS_COLUMNS.types[i]}
+                        colFonts={colFonts}
+                        colHeaders={SETTINGS_COLUMNS.headers}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                        style={{ ...inputTheme }}
+                        disabled={editRowId !== null}
+                      />
+                    )}
+                  </td>
+                ))}
+                <td style={{ ...gridTheme.td }}>
+                  <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                    <ActionButton type="save" onClick={handleAdd} title="Save" disabled={editRowId !== null} />
+                    <ActionButton type="reset" onClick={handleReset} title="Reset" disabled={editRowId !== null} />
                   </div>
                 </td>
               </tr>
-              {filteredSettings.map(setting => (
-                <tr key={setting.id}>
-                  <td style={gridTheme.td}>
-                    {editRowId === setting.id ? (
-                      <input type="text" value={editRowData.key ?? ''} onChange={e => handleRowChange(e, 'key')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)', transition: 'border 0.2s', width: '100%', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} />
-                    ) : (
-                      String(setting.key ?? '')
-                    )}
-                  </td>
-                  <td style={gridTheme.td} colSpan={editRowId === setting.id ? 1 : 2}>
-                    {editRowId === setting.id ? (
-                      <input type="text" value={editRowData.value ?? ''} onChange={e => handleRowChange(e, 'value')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)', transition: 'border 0.2s', width: '100%', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} />
-                    ) : (
-                      `${formatValueIN(setting.value)}${setting.units ? ' ' + setting.units : ''}`
-                    )}
-                  </td>
-                  {editRowId === setting.id && (
-                    <td style={gridTheme.td}>
-                      <RoundedDropdown
-                        value={editRowData.units ?? ''}
-                        onChange={e => handleRowChange(e, 'units')}
-                        options={unitOptionsList.map(opt => ({ value: opt, label: opt ? opt : 'Select' }))}
-                        placeholder="Units"
-                        style={{ width: '100%' }}
-                      />
+              {filteredSettings.map((setting, idx) =>
+                editRowId === setting.id ? (
+                  <tr key={setting.id}>
+                    {SETTINGS_COLUMNS.keys.map((key, i) => (
+                      <td key={key} style={{
+                        ...gridTheme.td,
+                        ...(key === 'value' ? { position: 'relative', zIndex: 10, overflow: 'visible' } : {})
+                      }}>
+                        {key === 'value' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <RoundedInput
+                              value={editRowData[key] || ''}
+                              onChange={e => handleRowChange(e, key)}
+                              placeholder="Value"
+                              type="text"
+                              colFonts={colFonts}
+                              colHeaders={SETTINGS_COLUMNS.headers}
+                              allRows={allRows}
+                              colKey={key}
+                              i={i}
+                              style={{ ...inputTheme }}
+                            />
+                            <RoundedDropdown
+                              options={unitOptions}
+                              value={editRowData['units'] || ''}
+                              onChange={e => setEditRowData({ ...editRowData, units: e.target.value })}
+                              placeholder="Units"
+                              style={{ ...inputTheme }}
+                            />
+                          </div>
+                        ) : (
+                          <RoundedInput
+                            value={editRowData[key] || ''}
+                            onChange={e => handleRowChange(e, key)}
+                            placeholder={SETTINGS_COLUMNS.placeholders[i]}
+                            type={SETTINGS_COLUMNS.types[i]}
+                            colFonts={colFonts}
+                            colHeaders={SETTINGS_COLUMNS.headers}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                            style={{ ...inputTheme }}
+                          />
+                        )}
+                      </td>
+                    ))}
+                    <td style={{ ...gridTheme.td }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton type="save" onClick={() => handleRowSave(setting.id)} title="Save" />
+                        <ActionButton type="cancel" onClick={handleRowCancel} title="Cancel" />
+                      </div>
                     </td>
-                  )}
-                  <td style={gridTheme.td}>
-                    {editRowId === setting.id ? (
-                      <input type="text" value={editRowData.description ?? ''} onChange={e => handleRowChange(e, 'description')} style={{ border: '1px solid #1976d2', borderRadius: '8px', padding: '4px 8px', outline: 'none', fontSize: '1em', boxShadow: '0 1px 4px rgba(25, 118, 210, 0.08)', transition: 'border 0.2s', width: '100%', background: '#f9fbfd', minHeight: 28, margin: 0, boxSizing: 'border-box', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' }} />
-                    ) : (
-                      String(setting.description ?? '')
-                    )}
-                  </td>
-                  <td style={{ minWidth: 90 }}>
-                    {editRowId === setting.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
-                        <ActionButton
-                          onClick={() => handleRowSave(setting.id)}
-                          type="save"
-                          title="Save"
-                        />
-                        <ActionButton
-                          onClick={handleRowCancel}
-                          type="cancel"
-                          title="Cancel"
-                        />
+                  </tr>
+                ) : (
+                  <tr key={setting.id}>
+                    {SETTINGS_COLUMNS.keys.map((key, i) => (
+                      <td key={key} style={{ ...gridTheme.td }}>
+                        {key === 'value'
+                          ? formatValueWithUnit(setting[key], setting.units)
+                          : String(setting[key] || '')
+                        }
+                      </td>
+                    ))}
+                    <td style={{ ...gridTheme.td }}>
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton type="edit" onClick={() => handleRowEdit(setting)} title="Edit" />
+                        <ActionButton type="delete" onClick={() => handleDelete(setting.id)} title="Delete" />
                       </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 90 }}>
-                        <ActionButton
-                          onClick={() => handleRowEdit(setting)}
-                          type="edit"
-                          title="Edit"
-                        />
-                        <ActionButton
-                          onClick={() => handleDelete(setting.id)}
-                          type="delete"
-                          title="Delete"
-                        />
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
       </div>
-      <ConfirmModal
-        open={confirm.open}
-        message={confirm.message}
-        onConfirm={confirm.onConfirm}
-        onCancel={() => setConfirm({ open: false })}
-      />
     </div>
   );
 }

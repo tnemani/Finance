@@ -106,3 +106,100 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
     const option = currencyOptions.find(opt => opt.value === currencyCode);
     return option ? option.label : currencyCode;
   }
+
+  // Helper function to format value with unit-specific prefix/suffix
+  export function formatValueWithUnit(value, units) {
+    if (value == null || value === '') return '';
+    
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    
+    // Format the number with Indian format
+    const [intPart, decPart] = num.toFixed(2).split('.');
+    let lastThree = intPart.slice(-3);
+    let otherNumbers = intPart.slice(0, -3);
+    if (otherNumbers !== '') lastThree = ',' + lastThree;
+    const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+    const finalValue = decPart === '00' ? formatted : formatted + '.' + decPart;
+    
+    if (!units) return finalValue;
+    
+    // Handle currency units (prefix with symbols)
+    if (units === 'USD') {
+      return `$ ${finalValue}`;
+    }
+    if (units === 'INR') {
+      return `₹ ${finalValue}`;
+    }
+    if (units === 'EUR') {
+      return `€ ${finalValue}`;
+    }
+    if (units === 'GBP') {
+      return `£ ${finalValue}`;
+    }
+    if (units === 'JPY') {
+      return `¥ ${finalValue}`;
+    }
+    if (units === 'CAD') {
+      return `C$ ${finalValue}`;
+    }
+    if (units === 'AUD') {
+      return `A$ ${finalValue}`;
+    }
+    if (units === 'SGD') {
+      return `S$ ${finalValue}`;
+    }
+    if (units === 'CNY') {
+      return `¥ ${finalValue}`;
+    }
+    
+    // Handle percentage (suffix, no space)
+    if (units === 'Percentage') {
+      return `${finalValue}%`;
+    }
+    
+    // Handle weight units (suffix with space)
+    if (units === 'Milligrams (mg)') {
+      return `${finalValue} mg`;
+    }
+    if (units === 'Grams (gm)') {
+      return `${finalValue} gms`;
+    }
+    if (units === 'Kilograms (kg)') {
+      return `${finalValue} kg`;
+    }
+    if (units === 'Ounce (oz)') {
+      return `${finalValue} oz`;
+    }
+    if (units === 'Troy Ounce (oz t)') {
+      return `${finalValue} oz t`;
+    }
+    if (units === 'Pounds (lb)') {
+      return `${finalValue} lb`;
+    }
+    if (units === 'Carat (ct)') {
+      return `${finalValue} ct`;
+    }
+    
+    // Handle time units (suffix with space)
+    if (units === 'hr(s)') {
+      return `${finalValue} hrs`;
+    }
+    if (units === 'day(s)') {
+      return `${finalValue} days`;
+    }
+    if (units === 'month(s)') {
+      return `${finalValue} months`;
+    }
+    if (units === 'year(s)') {
+      return `${finalValue} years`;
+    }
+    
+    // Handle miscellaneous units
+    if (units === 'Piece(s)') {
+      return `${finalValue} pieces`;
+    }
+    
+    // Default: append unit as suffix
+    return `${finalValue} ${units}`;
+  }

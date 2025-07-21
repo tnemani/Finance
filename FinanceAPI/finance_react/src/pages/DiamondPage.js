@@ -11,6 +11,7 @@ import { inputTheme } from '../components/inputTheme';
 import { currencyOptions, getWeightOptions } from '../constants/Fixedlist';
 import { formatDateMDY } from '../helpers/Helper';
 import {formatCurrencyValue} from '../helpers/Helper';
+import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
 
 const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/jewlery';
 const USERS_API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/users';
@@ -68,14 +69,14 @@ export default function DiamondPage() {
     setAddresses(res.data);
   };
 
-  // Build owner dropdown options from users
+  // Build owner dropdown options from users (family users only)
   const ownerOptions = users
-    .filter(u => u.shortName)
+    .filter(u => u.shortName && u.group && u.group.toLowerCase().includes('family'))
     .map(u => ({ label: u.shortName, value: u.id }));
 
-  // Build address dropdown options from addresses
+  // Build address dropdown options from addresses (business type only)
   const addressOptions = addresses
-    .filter(a => a.shortName)
+    .filter(a => a.shortName && a.addressType && a.addressType.toLowerCase() === 'business')
     .map(a => ({ label: a.shortName, value: a.id }));
 
   // Helper to get shortName from userId (handle string/number conversion)
@@ -102,25 +103,43 @@ export default function DiamondPage() {
     setEditIdx(null);
     setEditRow({});
   };
-  const handleSave = async idx => {
-    const row = editRow;
-    let payload = { ...row, type: 'Diamond' };
-    // Ensure owner is set from ownerId for API
-    if (payload.ownerId !== undefined) {
-      payload.owner = payload.ownerId;
-      delete payload.ownerId;
-    }
-    delete payload.id;
-    Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
-    if (row.id) {
-      await axios.put(`${API_URL}/${row.id}`, payload);
-    } else {
-      await axios.post(API_URL, payload);
-    }
-    setEditIdx(null);
-    setEditRow({});
+
+  const handleSave = async (idx) => {
+    setConfirm({
+      open: true,
+      idx,
+      message: 'Are you sure you want to update this diamond record?',
+      onConfirm: async () => {
+        setConfirm({ open: false, idx: null });
+        try {
+          const row = editRow;
+          let payload = { ...row, type: 'Diamond' };
+          // Ensure owner is set from ownerId for API
+          if (payload.ownerId !== undefined) {
+            payload.owner = payload.ownerId;
+            delete payload.ownerId;
+          }
+          delete payload.id;
+          Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
+          
+          if (row.id) {
+            await axios.put(`${API_URL}/${row.id}`, payload);
+          } else {
+            await axios.post(API_URL, payload);
+          }
+          setEditIdx(null);
+          setEditRow({});
+          await fetchDiamonds();
+        } catch (err) {
+          alert('Failed to update diamond record. Please check your input and try again.');
+        }
+      }
+    });
+  };
+
+  const handleReset = () => {
     setAddRow({ type: 'Diamond' });
-    fetchDiamonds();
+    setSearchText('');
   };
   const handleDelete = idx => {
     setConfirm({ open: true, idx });
@@ -132,17 +151,29 @@ export default function DiamondPage() {
     fetchDiamonds();
   };
   const handleAdd = async () => {
-    let payload = { ...addRow, type: 'Diamond' };
-    // Ensure owner is set from ownerId for API
-    if (payload.ownerId !== undefined) {
-      payload.owner = payload.ownerId;
-      delete payload.ownerId;
-    }
-    delete payload.id;
-    Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
-    await axios.post(API_URL, payload);
-    setAddRow({ type: 'Diamond' });
-    fetchDiamonds();
+    setConfirm({
+      open: true,
+      idx: null,
+      message: 'Are you sure you want to add this diamond record?',
+      onConfirm: async () => {
+        setConfirm({ open: false, idx: null });
+        try {
+          let payload = { ...addRow, type: 'Diamond' };
+          // Ensure owner is set from ownerId for API
+          if (payload.ownerId !== undefined) {
+            payload.owner = payload.ownerId;
+            delete payload.ownerId;
+          }
+          delete payload.id;
+          Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
+          await axios.post(API_URL, payload);
+          setAddRow({ type: 'Diamond' });
+          await fetchDiamonds();
+        } catch (err) {
+          alert('Failed to add diamond record. Please check your input and try again.');
+        }
+      }
+    });
   };
 
   const weightUnitOptions = getWeightOptions();
@@ -159,7 +190,12 @@ export default function DiamondPage() {
 
   return (
     <div style={{ padding: 0, paddingTop: 0 }}>
-      <ConfirmModal open={confirm.open} message="Are you sure you want to delete this record?" onConfirm={handleConfirmDelete} onCancel={() => setConfirm({ open: false, idx: null })} />
+      <ConfirmModal 
+        open={confirm.open} 
+        message={confirm.message || "Are you sure you want to delete this record?"} 
+        onConfirm={confirm.onConfirm || handleConfirmDelete} 
+        onCancel={() => setConfirm({ open: false, idx: null })} 
+      />
       <GridBanner
         icon={diamondIcon}
         title="Diamond Jewlery"
@@ -257,7 +293,10 @@ export default function DiamondPage() {
                   </td>
                 ))}
                 <td style={{ ...gridTheme.td }}>
-                  <ActionButton type="add" onClick={handleAdd} />
+                  <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                    <ActionButton type="save" onClick={handleAdd} title="Save" />
+                    <ActionButton type="reset" onClick={handleReset} title="Reset" />
+                  </div>
                 </td>
               </tr>
               {filteredDiamonds.map((row, idx) =>
@@ -335,9 +374,9 @@ export default function DiamondPage() {
                       </td>
                     ))}
                     <td style={{ ...gridTheme.td }}>
-                      <div style={{ display: 'flex' }}>
-                        <ActionButton type="save" onClick={() => handleSave(idx)} />
-                        <ActionButton type="cancel" onClick={handleCancel} />
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton type="save" onClick={() => handleSave(idx)} title="Save" />
+                        <ActionButton type="cancel" onClick={handleCancel} title="Cancel" />
                       </div>
                     </td>
                   </tr>
@@ -361,9 +400,9 @@ export default function DiamondPage() {
                       </td>
                     ))}
                     <td style={{ ...gridTheme.td }}>
-                      <div style={{ display: 'flex' }}>
-                        <ActionButton type="edit" onClick={() => handleEdit(idx)} />
-                        <ActionButton type="delete" onClick={() => handleDelete(idx)} />
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton type="edit" onClick={() => handleEdit(idx)} title="Edit" />
+                        <ActionButton type="delete" onClick={() => handleDelete(idx)} title="Delete" />
                       </div>
                     </td>
                   </tr>

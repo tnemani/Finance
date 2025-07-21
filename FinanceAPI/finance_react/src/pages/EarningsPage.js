@@ -105,22 +105,31 @@ export default function EarningsPage(props) {
     setEditRowData({ ...editRowData, [col]: e.target.value });
   };
 
-
-
-  // Format amount in Indian style
-  const formatValueIN = (value) => {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    if (isNaN(num)) return value;
-    const [intPart, decPart] = num.toFixed(2).split('.');
-    let lastThree = intPart.slice(-3);
-    let otherNumbers = intPart.slice(0, -3);
-    if (otherNumbers !== '')
-      lastThree = ',' + lastThree;
-    const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
-    if (decPart === '00') return formatted;
-    return formatted + '.' + decPart;
+  const handleCancel = () => {
+    setEditRowId(null);
+    setEditRowData({});
   };
+
+  const handleSave = async (earningId) => {
+    setConfirm({
+      open: true,
+      message: 'Are you sure you want to update this earning?',
+      onConfirm: async () => {
+        setConfirm({ open: false });
+        try {
+          const parsedData = parseEarningRow(editRowData);
+          await axios.put(`${API_URL}/${earningId}`, parsedData);
+          setEditRowId(null);
+          setEditRowData({});
+          await fetchEarnings();
+        } catch (err) {
+          alert('Failed to update earning. Please check your input and try again.');
+        }
+      }
+    });
+  };
+
+
 
   // Add common helper functions
   const columnFonts = createColumnFonts(colKeys.length);
@@ -322,7 +331,7 @@ export default function EarningsPage(props) {
                       title="Save"
                     />
                     <ActionButton
-                      onClick={() => setNewRow({})}
+                      onClick={() => { setNewRow({}); setSearchText(''); }}
                       disabled={editRowId !== null}
                       type="reset"
                       title="Reset"
@@ -367,7 +376,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'sender')}
                             options={userOptions}
                             placeholder="Sender"
-                            style={{ maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            style={{ border: '1px solid #1976d2', maxWidth: senderMaxWidth, minWidth: 140, width: senderMaxWidth }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -380,7 +389,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'receiver')}
                             options={userOptions}
                             placeholder="Receiver"
-                            style={{ maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            style={{ border: '1px solid #1976d2', maxWidth: receiverMaxWidth, minWidth: 140, width: receiverMaxWidth }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -393,7 +402,7 @@ export default function EarningsPage(props) {
                             onChange={e => handleRowChange(e, 'ownerId')}
                             options={userOptions}
                             placeholder="Owner"
-                            style={{ maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth, border: '1px solid #1976d2', borderRadius: gridTheme.roundedInputTheme.borderRadius, height: 40, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box' }}
+                            style={{ border: '1px solid #1976d2', maxWidth: ownerMaxWidth, minWidth: 140, width: ownerMaxWidth }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
@@ -472,12 +481,12 @@ export default function EarningsPage(props) {
                     {editRowId === earning.id ? (
                       <div style={ACTION_BUTTON_CONTAINER_STYLE}>
                         <ActionButton
-                          onClick={() => handleRowSave(earning.id)}
+                          onClick={() => handleSave(earning.id)}
                           type="save"
                           title="Save"
                         />
                         <ActionButton
-                          onClick={handleRowCancel}
+                          onClick={handleCancel}
                           type="cancel"
                           title="Cancel"
                         />
