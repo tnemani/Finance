@@ -7,6 +7,7 @@ import CashIcon from './icons/CashIcon';
 import RecurringIncomeIcon from './icons/RecurringIncomeIcon';
 import PoliciesStocksIcon from './icons/policies_stocks.png';
 import treasureIcon from './icons/treasure.png';
+import retirementIcon from './icons/retirement.png';
 
 function NavMenu() {
   const location = useLocation();
@@ -17,6 +18,7 @@ function NavMenu() {
     { to: '/recurring-incomes', icon: <RecurringIncomeIcon size={40} color="#1976d2" />, label: 'Cyclic Wages' },
     { to: '/policy-stocks', icon: <img src={PoliciesStocksIcon} alt="Policy & Stocks" style={{ width: 40, height: 40, objectFit: 'contain' }} />, label: 'Policy & Stocks' },
     { to: '/treasure', icon: <img src={treasureIcon} alt="Treasure" style={{ width: 40, height: 40, objectFit: 'contain' }} />, label: 'Treasure' },
+    { to: '/retirement', icon: <img src={retirementIcon} alt="Retirement" style={{ width: 40, height: 40, objectFit: 'contain' }} />, label: 'Retirement' },
     { to: '/settings', icon: <SettingsIcon size={40} color="#1976d2" />, label: 'Settings' },
   ];
   return (
