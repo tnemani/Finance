@@ -215,3 +215,11 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
       const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
       return Math.max(headerWidth, ...cellWidths, 80) + 40;
   }
+
+  // Helper to format date for HTML date input fields (YYYY-MM-DD format)
+export const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toISOString().split('T')[0];
+};

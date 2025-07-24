@@ -6,277 +6,265 @@ import { ActionButton } from '../components/ActionButton';
 import ConfirmModal from '../components/ConfirmModal';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
+import ssnIcon from '../components/icons/ssn.png';
 import { currencyOptions } from '../constants/Fixedlist';
-import { formatCurrencyValue, getCurrencyDisplayLabel, formatMonthDayYear } from '../helpers/Helper';
-import SSNIcon from '../components/icons/ssn.png';
+import { formatMonthDayYear, formatCurrencyValue, formatDateForInput } from '../helpers/Helper';
+import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
 
-import {
-  createGenericHandlers,
-  createSearchFilter,
-  SPACING,
-  FLEX_ROW_CENTER,
-  ACTION_BUTTON_CONTAINER_STYLE,
-  createColumnFonts,
-  createAllRows
-} from '../constants/common';
-import '../constants/common.css';
+const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/investment/ssn';
+const USERS_API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5226/api') + '/users';
 
-const API_URL = 'http://localhost:5226/api/investment/ssn';
-const SSN_TYPE = 'SSN';
-
-// Column definitions for dynamic width calculation
-const SSN_COLUMNS = [
-  { key: 'userShortName', label: 'User', type: 'dropdown' },
-  { key: 'ssnNumber', label: 'SSN Number', type: 'text' },
-  { key: 'benefitType', label: 'Benefit Type', type: 'text' },
-  { key: 'monthlyBenefit', label: 'Monthly Benefit', type: 'number' },
-  { key: 'currency', label: 'Currency', type: 'dropdown' },
-  { key: 'startDate', label: 'Start Date', type: 'date' },
-  { key: 'endDate', label: 'End Date', type: 'date' },
-  { key: 'status', label: 'Status', type: 'text' },
-  { key: 'description', label: 'Description', type: 'text' }
-];
-
-// Helper function to parse SSN row data for API
-const parseSSNRow = (row) => ({
-  ...row,
-  monthlyBenefit: row.monthlyBenefit !== undefined && row.monthlyBenefit !== '' ? Number(row.monthlyBenefit) : null,
-  userId: row.userId !== undefined ? Number(row.userId) : null
-});
-
-function SSNPage() {
-  const [ssnAccounts, setSsnAccounts] = useState([]);
-  const [users, setUsers] = useState([]);
+export default function SSNPage() {
+  const [ssns, setSSNs] = useState([]);
   const [searchText, setSearchText] = useState('');
-  const [filteredSsnAccounts, setFilteredSsnAccounts] = useState([]);
-  const [editIdx, setEditIdx] = useState(null);
-  const [editRow, setEditRow] = useState({});
-  const [addRow, setAddRow] = useState({ userShortName: '', ssnNumber: '', benefitType: '', monthlyBenefit: '', currency: '', startDate: '', endDate: '', status: '', description: '' });
-  const [confirm, setConfirm] = useState({ open: false, idx: null });
-  const [undoRow, setUndoRow] = useState(null);
-  const [undoIdx, setUndoIdx] = useState(null);
+  const [filteredSSNs, setFilteredSSNs] = useState([]);
+  const [editRowId, setEditRowId] = useState(null);
+  const [editRowData, setEditRowData] = useState({});
+  const [newRow, setNewRow] = useState({});
+  const [confirm, setConfirm] = useState({ open: false });
+  const [users, setUsers] = useState([]);
 
-  // Define column structure
-  const colKeys = ['userShortName', 'ssnNumber', 'benefitType', 'monthlyBenefit', 'currency', 'startDate', 'endDate', 'status', 'description'];
-  const colHeaders = ['User', 'SSN Number', 'Benefit Type', 'Monthly Benefit', 'Currency', 'Start Date', 'End Date', 'Status', 'Description'];
+  useEffect(() => { fetchSSNs(); fetchUsers(); }, []);
 
-  // Declare fetch functions first to avoid temporal dead zone
-  const fetchSSNAccounts = async () => {
+  useEffect(() => {
+    if (!searchText) setFilteredSSNs(ssns);
+    else {
+      const lower = searchText.toLowerCase();
+      setFilteredSSNs(
+        ssns.filter(s =>
+          Object.values(s).some(val =>
+            (typeof val === 'string' && val.toLowerCase().includes(lower)) ||
+            (typeof val === 'number' && String(val).includes(lower))
+          )
+        )
+      );
+    }
+  }, [searchText, ssns]);
+
+  const fetchSSNs = async () => {
     const res = await axios.get(API_URL);
-    // Only keep records with type === 'SSN'
-    setSsnAccounts(res.data.filter(p => p.type === 'SSN'));
+    console.log('=== SSN API Response ===');
+    console.log('SSN data:', res.data);
+    if (res.data.length > 0) {
+      console.log('First SSN record dates:', {
+        lastUpdatedDate: res.data[0].lastUpdatedDate,
+        type: typeof res.data[0].lastUpdatedDate
+      });
+    }
+    console.log('=======================');
+    setSSNs(res.data);
   };
 
   const fetchUsers = async () => {
-    const res = await axios.get('http://localhost:5226/api/users');
+    const res = await axios.get(USERS_API_URL);
     setUsers(res.data);
   };
 
-  // Use common generic handlers
-  const {
-    handleRowSave,
-    handleRowCancel,
-    handleDelete,
-    handleAdd
-  } = createGenericHandlers({
-    apiUrl: API_URL,
-    editRowData: editRow,
-    setEditRowId: setEditIdx,
-    setEditRowData: setEditRow,
-    newRow: addRow,
-    setNewRow: setAddRow,
-    fetchData: fetchSSNAccounts,
-    parseRow: parseSSNRow,
-    modalConfig: {
-      update: 'Are you sure you want to update this SSN benefit?',
-      delete: 'Are you sure you want to delete this SSN benefit?',
-      add: 'Are you sure you want to add this SSN benefit?'
-    },
-    setConfirm
-  });
+  // Build owner dropdown options from users (family users only)
+  const userOptions = users
+    .filter(u => u.shortName && u.group && u.group.toLowerCase() === 'family')
+    .map(u => ({ label: u.shortName, value: u.id }));
 
-  useEffect(() => {
-    fetchUsers();
-    fetchSSNAccounts();
-  }, []);
+  // Helper to get shortName from userId
+  const getUserLabel = (userId) => {
+    if (userId === undefined || userId === null || userId === '') {
+      return '';
+    }
+    const user = users.find(u => String(u.id) === String(userId));
+    return user && user.shortName ? user.shortName : '';
+  };
 
-  useEffect(() => {
-    setFilteredSsnAccounts(createSearchFilter(ssnAccounts, searchText));
-  }, [searchText, ssnAccounts]);
-
-  const handleEdit = idx => {
-    setEditIdx(idx);
-    setEditRow({ ...filteredSsnAccounts[idx] });
+  const handleRowEdit = (ssn) => {
+    console.log('=== SSN Page Debug ===');
+    console.log('Raw SSN object:', ssn);
+    console.log('SSN lastUpdatedDate value:', ssn.lastUpdatedDate);
+    console.log('SSN lastUpdatedDate type:', typeof ssn.lastUpdatedDate);
+    console.log('Date object from SSN date:', new Date(ssn.lastUpdatedDate));
+    console.log('=====================');
+    setEditRowId(ssn.id);
+    setEditRowData({ ...ssn });
   };
 
   const handleCancel = () => {
-    setEditIdx(null);
-    setEditRow({});
+    setEditRowId(null);
+    setEditRowData({});
   };
 
-  const handleSave = async idx => {
-    await handleRowSave(filteredSsnAccounts[idx].id, editRow);
-    setEditIdx(null);
-    setEditRow({});
+  const handleRowChange = (e, key) => {
+    setEditRowData({ ...editRowData, [key]: e.target.value });
   };
 
-  // Add common helper functions
-  const columnFonts = createColumnFonts(colKeys.length);
-  const allRows = createAllRows(addRow, filteredSsnAccounts, editRow);
+  const handleSave = async (id) => {
+    setConfirm({
+      open: true,
+      message: 'Are you sure you want to update this SSN record?',
+      onConfirm: async () => {
+        setConfirm({ open: false });
+        try {
+          let payload = { ...editRowData };
+          delete payload.userShortName;
+          Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
+          
+          await axios.put(`${API_URL}/${id}`, payload);
+          setEditRowId(null);
+          setEditRowData({});
+          await fetchSSNs();
+        } catch (err) {
+          console.error('SSN Update Error:', err.response?.data || err.message);
+          alert(`Failed to update SSN record: ${err.response?.data?.message || err.message}`);
+        }
+      }
+    });
+  };
 
-  function getTextWidth(text, font = '16px Arial') {
-    if (typeof document === 'undefined') return 200;
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement('canvas'));
-    const context = canvas.getContext('2d');
-    context.font = font;
-    return context.measureText(text).width;
-  }
+  const handleAdd = async () => {
+    setConfirm({
+      open: true,
+      message: 'Are you sure you want to add this SSN record?',
+      onConfirm: async () => {
+        setConfirm({ open: false });
+        try {
+          let payload = { ...newRow };
+          delete payload.userShortName;
+          delete payload.id;
+          Object.keys(payload).forEach(key => { if (payload[key] === '') delete payload[key]; });
+          await axios.post(API_URL, payload);
+          setNewRow({});
+          await fetchSSNs();
+        } catch (err) {
+          alert('Failed to add SSN record. Please check your input and try again.');
+        }
+      }
+    });
+  };
 
-  // Calculate column widths based on content
-  function getColWidth(key, header, index) {
-    const headerWidth = getTextWidth(header, '16px Arial');
-    const cellWidths = allRows.map(row => getTextWidth((row && row[key]) ? String(row[key]) : '', '16px Arial'));
-    return Math.max(headerWidth, ...cellWidths, 120) + 40;
-  }
+  const handleDelete = (id) => {
+    setConfirm({
+      open: true,
+      message: 'Are you sure you want to delete this SSN record?',
+      onConfirm: async () => {
+        setConfirm({ open: false });
+        await axios.delete(`${API_URL}/${id}`);
+        await fetchSSNs();
+      }
+    });
+  };
 
-  // Create user options for dropdowns
-  const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
-
-  // Status options for dropdown
-  const statusOptions = [
-    { value: 'Active', label: 'Active' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Inactive', label: 'Inactive' },
-    { value: 'Suspended', label: 'Suspended' }
+  const allRows = [newRow, ...filteredSSNs, editRowData];
+  const colKeys = [
+    'userId', 'currency', 'monthlyAfter62', 'monthlyAfter67', 'monthlyAfter70', 'lastUpdatedDate', 'description'
   ];
+  const colHeaders = [
+    'Owner', 'Currency', 'Monthly After 62', 'Monthly After 67', 'Monthly After 70', 'Last Updated', 'Description'
+  ];
+  const columnFonts = Array(colKeys.length).fill('16px Arial');
 
   return (
-    <div style={{ padding: 0, paddingTop: 0 }}>
-      <ConfirmModal 
-        open={confirm.open} 
-        message={confirm.message || "Are you sure you want to delete this record?"} 
-        onConfirm={confirm.onConfirm} 
-        onCancel={() => setConfirm({ open: false, idx: null })} 
-      />
+    <div className="page-container">
       <GridBanner
-        icon={SSNIcon}
-        title="SSN Benefits"
+        icon={ssnIcon}
+        title="Social Security"
         searchText={searchText}
         setSearchText={setSearchText}
-        placeholder="Search SSN benefits..."
+        placeholder="Search SSN records..."
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', textAlign: 'left', width: '100%' }}
         titleStyle={{ fontSize: 28, fontWeight: 600, marginLeft: 12, textAlign: 'left', display: 'inline-block' }}
         iconStyle={{ height: 40, display: 'inline-block' }}
       />
-      <div style={{ height: 16 }} />
+      <div style={{ height: 12 }} />
       <div style={{ width: 'fit-content', margin: '0 auto'}}>
         <div style={{ ...gridTheme.scrollContainer, maxHeight: 800, overflowY: 'auto' }}>
           <table style={gridTheme.table}>
             <thead>
               <tr>
                 {colHeaders.map((header, i) => (
-                  <th key={header} style={{ ...gridTheme.th, whiteSpace: 'normal', maxWidth: getColWidth(colKeys[i], header, i), width: getColWidth(colKeys[i], header, i), textAlign: 'left', fontWeight: 600, fontSize: 16 }}>{header}</th>
+                  <th key={header} style={gridTheme.th}>{header}</th>
                 ))}
-                <th style={{ ...gridTheme.th, whiteSpace: 'nowrap' }}></th>
+                <th style={gridTheme.th}></th>
               </tr>
             </thead>
             <tbody>
-              {/* Add row */}
               <tr>
                 {colKeys.map((key, i) => (
-                  key === 'userShortName' ? (
-                    <td key={key} style={{ ...gridTheme.td }}>
+                  <td key={key} style={gridTheme.td}>
+                    {key === 'userId' ? (
                       <RoundedDropdown
-                        value={addRow.userShortName}
-                        onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
+                        value={newRow.userId || ''}
+                        onChange={e => setNewRow({ ...newRow, userId: e.target.value })}
                         options={userOptions}
-                        placeholder="User"
+                        placeholder="Owner"
+                        disabled={editRowId !== null}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
                         colKey={key}
                         i={i}
                       />
-                    </td>
-                  ) : key === 'currency' ? (
-                    <td key={key} style={{ ...gridTheme.td }}>
+                    ) : key === 'currency' ? (
                       <RoundedDropdown
-                        value={addRow.currency}
-                        onChange={e => setAddRow({ ...addRow, currency: e.target.value })}
+                        value={newRow.currency || ''}
+                        onChange={e => setNewRow({ ...newRow, currency: e.target.value })}
                         options={currencyOptions}
                         placeholder="Currency"
-                        colFonts={columnFonts}
-                        colHeaders={colHeaders}
-                        allRows={allRows}
-                        colKey={key}
-                        i={i}
+                        disabled={editRowId !== null}
                       />
-                    </td>
-                  ) : key === 'status' ? (
-                    <td key={key} style={{ ...gridTheme.td }}>
-                      <RoundedDropdown
-                        value={addRow.status}
-                        onChange={e => setAddRow({ ...addRow, status: e.target.value })}
-                        options={statusOptions}
-                        placeholder="Status"
-                        colFonts={columnFonts}
-                        colHeaders={colHeaders}
-                        allRows={allRows}
-                        colKey={key}
-                        i={i}
-                      />
-                    </td>
-                  ) : key === 'startDate' || key === 'endDate' ? (
-                    <td key={key} style={{ ...gridTheme.td }}>
-                      <RoundedInput
-                        type="date"
-                        value={addRow[key]}
-                        onChange={e => setAddRow({ ...addRow, [key]: e.target.value })}
-                        placeholder={colHeaders[i]}
-                        style={{ width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
-                        colFonts={columnFonts}
-                        colHeaders={colHeaders}
-                        allRows={allRows}
-                        colKey={key}
-                        i={i}
-                      />
-                    </td>
-                  ) : (
-                    <td key={key} style={{ ...gridTheme.td }}>
+                    ) : key === 'lastUpdatedDate' ? (
                       <RoundedInput 
-                        value={addRow[key]} 
-                        onChange={e => setAddRow({ ...addRow, [key]: e.target.value })} 
+                        type="date" 
+                        value={newRow[key] || ''} 
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })} 
                         placeholder={colHeaders[i]} 
-                        type={key === 'monthlyBenefit' ? 'number' : 'text'}
+                        disabled={editRowId !== null}
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
                         allRows={allRows}
                         colKey={key}
                         i={i}
                       />
-                    </td>
-                  )
+                    ) : (
+                      <RoundedInput 
+                        value={newRow[key] || ''} 
+                        onChange={e => setNewRow({ ...newRow, [key]: e.target.value })} 
+                        placeholder={colHeaders[i]} 
+                        type={key === 'monthlyAfter62' || key === 'monthlyAfter67' || key === 'monthlyAfter70' ? 'number' : 'text'}
+                        disabled={editRowId !== null}
+                        colFonts={columnFonts}
+                        colHeaders={colHeaders}
+                        allRows={allRows}
+                        colKey={key}
+                        i={i}
+                      />
+                    )}
+                  </td>
                 ))}
-                <td style={{ ...gridTheme.td }}>
+                <td style={{ border: '1px solid #ccc', padding: 4, verticalAlign: 'middle' }}>
                   <div style={ACTION_BUTTON_CONTAINER_STYLE}>
-                    <ActionButton type="save" onClick={() => handleAdd(addRow)} title="Add SSN Benefit" />
-                    <ActionButton type="reset" onClick={() => setAddRow({ userShortName: '', ssnNumber: '', benefitType: '', monthlyBenefit: '', currency: '', startDate: '', endDate: '', status: '', description: '' })} title="Reset" />
+                    <ActionButton
+                      onClick={handleAdd}
+                      disabled={editRowId !== null}
+                      type="save"
+                      title="Save"
+                    />
+                    <ActionButton
+                      onClick={() => { setNewRow({}); setSearchText(''); }}
+                      disabled={editRowId !== null}
+                      type="reset"
+                      title="Reset"
+                    />
                   </div>
                 </td>
               </tr>
-              
-              {/* Data rows */}
-              {filteredSsnAccounts.map((account, idx) => (
-                editIdx === idx ? (
-                  <tr key={account.id}>
-                    {colKeys.map((key, i) => (
-                      key === 'userShortName' ? (
-                        <td key={key} style={{ ...gridTheme.td }}>
+              {filteredSSNs.map(ssn => (
+                <tr key={ssn.id}>
+                  {colKeys.map((key, i) => (
+                    <td key={key} style={gridTheme.td}>
+                      {editRowId === ssn.id ? (
+                        key === 'userId' ? (
                           <RoundedDropdown
-                            value={editRow.userShortName}
-                            onChange={e => setEditRow({ ...editRow, userShortName: e.target.value })}
+                            value={editRowData.userId || ''}
+                            onChange={e => handleRowChange(e, 'userId')}
                             options={userOptions}
-                            placeholder="User"
+                            placeholder="Owner"
                             style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
@@ -284,105 +272,95 @@ function SSNPage() {
                             colKey={key}
                             i={i}
                           />
-                        </td>
-                      ) : key === 'currency' ? (
-                        <td key={key} style={{ ...gridTheme.td }}>
+                        ) : key === 'currency' ? (
                           <RoundedDropdown
-                            value={editRow.currency}
-                            onChange={e => setEditRow({ ...editRow, currency: e.target.value })}
+                            value={editRowData.currency || ''}
+                            onChange={e => handleRowChange(e, 'currency')}
                             options={currencyOptions}
                             placeholder="Currency"
                             style={{ border: '1px solid #1976d2' }}
-                            colFonts={columnFonts}
-                            colHeaders={colHeaders}
-                            allRows={allRows}
-                            colKey={key}
-                            i={i}
                           />
-                        </td>
-                      ) : key === 'status' ? (
-                        <td key={key} style={{ ...gridTheme.td }}>
-                          <RoundedDropdown
-                            value={editRow.status}
-                            onChange={e => setEditRow({ ...editRow, status: e.target.value })}
-                            options={statusOptions}
-                            placeholder="Status"
-                            style={{ border: '1px solid #1976d2' }}
-                            colFonts={columnFonts}
-                            colHeaders={colHeaders}
-                            allRows={allRows}
-                            colKey={key}
-                            i={i}
-                          />
-                        </td>
-                      ) : key === 'startDate' || key === 'endDate' ? (
-                        <td key={key} style={{ ...gridTheme.td }}>
-                          <RoundedInput
-                            type="date"
-                            value={editRow[key] || ''}
-                            onChange={e => setEditRow({ ...editRow, [key]: e.target.value })}
-                            placeholder={colHeaders[i]}
-                            style={{ border: '1px solid #1976d2', width: '100%', maxWidth: getColWidth(key, colHeaders[i], i) }}
-                            colFonts={columnFonts}
-                            colHeaders={colHeaders}
-                            allRows={allRows}
-                            colKey={key}
-                            i={i}
-                          />
-                        </td>
-                      ) : (
-                        <td key={key} style={{ ...gridTheme.td }}>
+                        ) : key === 'lastUpdatedDate' ? (
                           <RoundedInput 
-                            value={editRow[key] || ''} 
-                            onChange={e => setEditRow({ ...editRow, [key]: e.target.value })} 
+                            type="date" 
+                            value={formatDateForInput(editRowData[key]) || ''} 
+                            onChange={e => handleRowChange(e, key)} 
+                            placeholder={colHeaders[i]} 
                             style={{ border: '1px solid #1976d2' }}
-                            type={key === 'monthlyBenefit' ? 'number' : 'text'}
                             colFonts={columnFonts}
                             colHeaders={colHeaders}
                             allRows={allRows}
                             colKey={key}
                             i={i}
                           />
-                        </td>
-                      )
-                    ))}
-                    <td style={{ ...gridTheme.td }}>
-                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
-                        <ActionButton type="save" onClick={() => handleSave(idx)} title="Save" />
-                        <ActionButton type="cancel" onClick={handleCancel} title="Cancel" />
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={account.id}>
-                    {colKeys.map((key, i) => (
-                      <td key={key} style={{ ...gridTheme.td }}>
-                        {key === 'monthlyBenefit' ? (
-                          formatCurrencyValue(account[key], account.currency)
-                        ) : key === 'startDate' || key === 'endDate' ? (
-                          account[key] ? formatMonthDayYear(account[key]) : ''
-                        ) : key === 'currency' ? (
-                          getCurrencyDisplayLabel(account[key])
                         ) : (
-                          account[key] || ''
-                        )}
-                      </td>
-                    ))}
-                    <td style={{ ...gridTheme.td }}>
-                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
-                        <ActionButton type="edit" onClick={() => handleEdit(idx)} title="Edit" />
-                        <ActionButton type="delete" onClick={() => handleDelete(account.id)} title="Delete" />
-                      </div>
+                          <RoundedInput 
+                            value={editRowData[key] || ''} 
+                            onChange={e => handleRowChange(e, key)} 
+                            placeholder={colHeaders[i]} 
+                            type={key === 'monthlyAfter62' || key === 'monthlyAfter67' || key === 'monthlyAfter70' ? 'number' : 'text'}
+                            style={{ border: '1px solid #1976d2' }}
+                            colFonts={columnFonts}
+                            colHeaders={colHeaders}
+                            allRows={allRows}
+                            colKey={key}
+                            i={i}
+                          />
+                        )
+                      ) : (
+                        key === 'lastUpdatedDate' ? (
+                          formatMonthDayYear(ssn[key])
+                        ) : key === 'userId' ? (
+                          getUserLabel(ssn.userId)
+                        ) : key === 'monthlyAfter62' || key === 'monthlyAfter67' || key === 'monthlyAfter70' ? (
+                          formatCurrencyValue(ssn[key], ssn.currency)
+                        ) : (
+                          ssn[key]
+                        )
+                      )}
                     </td>
-                  </tr>
-                )
+                  ))}
+                  <td style={gridTheme.td}>
+                    {editRowId === ssn.id ? (
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton
+                          onClick={() => handleSave(ssn.id)}
+                          type="save"
+                          title="Save"
+                        />
+                        <ActionButton
+                          onClick={handleCancel}
+                          type="cancel"
+                          title="Cancel"
+                        />
+                      </div>
+                    ) : (
+                      <div style={ACTION_BUTTON_CONTAINER_STYLE}>
+                        <ActionButton
+                          onClick={() => handleRowEdit(ssn)}
+                          type="edit"
+                          title="Edit"
+                        />
+                        <ActionButton
+                          onClick={() => handleDelete(ssn.id)}
+                          type="delete"
+                          title="Delete"
+                        />
+                      </div>
+                    )}
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      <ConfirmModal
+        open={confirm.open}
+        message={confirm.message}
+        onConfirm={confirm.onConfirm}
+        onCancel={() => setConfirm({ open: false })}
+      />
     </div>
   );
 }
-
-export default SSNPage;

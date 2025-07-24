@@ -9,7 +9,7 @@ import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
 import { currencyOptions } from '../constants/Fixedlist';
-import { formatCurrencyValue, getCurrencyDisplayLabel, formatMonthDayYear } from '../helpers/Helper';
+import { formatCurrencyValue, getCurrencyDisplayLabel, formatMonthDayYear, formatDateForInput } from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -149,8 +149,13 @@ function StudentGetPage() {
   const typeOptions = Array.from(new Set([addRow.type, ...filteredGets.map(s => s.type), editRow.type].filter(Boolean))).map(t => ({ value: t, label: t }));
   const typeComboOptions = typeOptions;
 
-  // Create user options for dropdowns
-  const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
+  // Create user options for dropdowns - Filter for Manikanta only
+  const userOptions = users
+    .filter(u => u.shortName && u.shortName === 'Manikanta')
+    .map(u => ({ value: u.shortName, label: u.shortName }));
+
+  // Also create a filtered users array for consistency
+  const filteredUsers = users.filter(u => u.shortName && u.shortName === 'Manikanta');
 
   // Calculate column widths similar to original colWidths logic
   function getColWidth(key, header, index) {
@@ -229,7 +234,7 @@ function StudentGetPage() {
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
-                        options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
+                        options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                         placeholder="User"
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
@@ -331,14 +336,14 @@ function StudentGetPage() {
                             value={editRow.userShortName}
                             onChange={e => {
                               const selectedShortName = e.target.value;
-                              const user = users.find(u => u.shortName === selectedShortName);
+                              const user = filteredUsers.find(u => u.shortName === selectedShortName);
                               setEditRow({
                                 ...editRow,
                                 userShortName: selectedShortName,
                                 userId: user ? user.id : undefined
                               });
                             }}
-                            options={users.map(u => ({ value: u.shortName, label: u.shortName }))}
+                            options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                             placeholder="User"
                             style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
@@ -384,7 +389,7 @@ function StudentGetPage() {
                         <td key={key} style={{ ...gridTheme.td}}>
                           <RoundedInput
                             type="date"
-                            value={editRow.startDate || ''}
+                            value={formatDateForInput(editRow.startDate) || ''}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
                             placeholder="Start Date"
                             style={{ border: '1px solid #1976d2'}}

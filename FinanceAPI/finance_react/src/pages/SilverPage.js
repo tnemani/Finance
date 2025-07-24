@@ -9,7 +9,7 @@ import RoundedDropdown from '../components/RoundedDropdown';
 import silverIcon from '../components/icons/silver.png';
 import { inputTheme } from '../components/inputTheme';
 import { currencyOptions, getWeightOptions } from '../constants/Fixedlist';
-import { formatMonthDayYear } from '../helpers/Helper';
+import { formatMonthDayYear, formatDateForInput } from '../helpers/Helper';
 import {formatCurrencyValue} from '../helpers/Helper';
 import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
 
@@ -278,7 +278,7 @@ export default function SilverPage() {
                       </div>
                     ) : (
                       <RoundedInput
-                        value={addRow[key] || ''}
+                        value={key === 'purchasedDate' ? formatDateForInput(addRow[key]) : addRow[key] || ''}
                         onChange={e => setAddRow({ ...addRow, [key]: e.target.value })}
                         placeholder={colHeaders[i]}
                         type={key === 'weight' || key === 'purchasedPrice' ? 'number' : key === 'purchasedDate' ? 'date' : 'text'}
@@ -287,7 +287,7 @@ export default function SilverPage() {
                         allRows={allRows}
                         colKey={key}
                         i={i}
-                        style={{ ...inputTheme}}
+                        style={{ ...inputTheme }}
                       />
                     )}
                   </td>
@@ -359,7 +359,7 @@ export default function SilverPage() {
                           </div>
                         ) : (
                           <RoundedInput
-                            value={editRow[key] || ''}
+                            value={key === 'purchasedDate' ? formatDateForInput(editRow[key]) : editRow[key] || ''}
                             onChange={e => setEditRow({ ...editRow, [key]: e.target.value })}
                             placeholder={colHeaders[i]}
                             type={key === 'weight' || key === 'purchasedPrice' ? 'number' : key === 'purchasedDate' ? 'date' : 'text'}

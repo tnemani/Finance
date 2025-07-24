@@ -9,7 +9,7 @@ import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
 import { fetchSymbolSettingsMap } from '../utils/settingsUtils';
 import { currencyOptions } from '../constants/Fixedlist';
-import { formatCurrencyValue, getCurrencyDisplayLabel, getColWidth,formatMonthDayYear } from '../helpers/Helper';
+import { formatCurrencyValue, getCurrencyDisplayLabel, getColWidth, formatMonthDayYear, formatDateForInput } from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -164,7 +164,7 @@ function StockPage() {
   }
 
   // Create user options for dropdowns
-  const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
+  const filteredUsers = users.filter(u => u.shortName && u.group.toLowerCase().includes('family'));
 
   return (
     <div className="page-container">
@@ -227,7 +227,7 @@ function StockPage() {
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
-                        options={userOptions}
+                        options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                         placeholder="User"
                         colFonts={columnFonts}
                         colHeaders={colHeaders}
@@ -336,7 +336,7 @@ function StockPage() {
                                 userId: user ? user.id : undefined
                               });
                             }}
-                            options={userOptions}
+                            options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                             placeholder="User"
                             style={{ border: '1px solid #1976d2' }}
                             colFonts={columnFonts}
@@ -382,7 +382,7 @@ function StockPage() {
                         <td key={key} style={{ ...gridTheme.td, maxWidth: getColWidth(key, colHeaders[i], allRows), width: getColWidth(key, colHeaders[i], allRows) }}>
                           <RoundedInput
                             type="date"
-                            value={editRow.startDate || ''}
+                            value={formatDateForInput(editRow.startDate) || ''}
                             onChange={e => setEditRow({ ...editRow, startDate: e.target.value })}
                             placeholder="Start Date"
                             style={{ border: '1px solid #1976d2', width: '100%', maxWidth: getColWidth(key, colHeaders[i], allRows) }}

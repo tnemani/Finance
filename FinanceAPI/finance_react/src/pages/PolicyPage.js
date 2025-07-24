@@ -162,8 +162,8 @@ function PolicyPage() {
   }
 
   // Create user options for dropdowns
-  const userOptions = users.map(u => ({ value: u.shortName, label: u.shortName }));
-
+  const filteredUsers = users.filter(u => u.shortName && u.group.toLowerCase().includes('family'));
+// ...existing code...
   return (
     <div className="page-container">
       <ConfirmModal 
@@ -221,7 +221,7 @@ function PolicyPage() {
                       <RoundedDropdown
                         value={addRow.userShortName}
                         onChange={e => setAddRow({ ...addRow, userShortName: e.target.value })}
-                        options={userOptions}
+                        options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                         placeholder="User"
                         style={{ width: '100%',  maxWidth: getColWidth(key, colHeaders[i], i) }}
                         colFonts={columnFonts}
@@ -311,7 +311,7 @@ function PolicyPage() {
                           <RoundedDropdown
                             value={editRow.userShortName}
                             onChange={e => setEditRow({ ...editRow, userShortName: e.target.value })}
-                            options={userOptions}
+                            options={filteredUsers.map(u => ({ value: u.shortName, label: u.shortName }))}
                             placeholder="User"
                             style={{ width: '100%',  maxWidth: getColWidth(key, colHeaders[i], i) }}
                             colFonts={columnFonts}

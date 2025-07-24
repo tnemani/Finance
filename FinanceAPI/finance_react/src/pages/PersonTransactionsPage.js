@@ -10,7 +10,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
 import { inputTheme } from '../components/inputTheme';
-import { formatCurrencyValue, getCurrencyDisplayLabel } from '../helpers/Helper';
+import { formatCurrencyValue, getCurrencyDisplayLabel, formatDateForInput } from '../helpers/Helper';
 import {
   SPACING,
   FLEX_ROW_CENTER,
@@ -528,7 +528,7 @@ function PersonTransactionsPage() {
                                         {key === 'scheduleDate' ? (
                                           <RoundedInput 
                                             type="date" 
-                                            value={editDetail.data.scheduleDate ? new Date(editDetail.data.scheduleDate).toISOString().slice(0, 10) : ''} 
+                                            value={formatDateForInput(editDetail.data.scheduleDate) || ''} 
                                             onChange={e => handleDetailChange(e, 'scheduleDate')} 
                                             placeholder={DETAIL_COLUMNS.placeholders[j]}
                                             colFonts={detailColFonts}

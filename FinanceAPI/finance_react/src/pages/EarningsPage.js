@@ -7,7 +7,7 @@ import { gridTheme } from '../components/gridTheme';
 import { currencyOptions, getEarningsTypeOptions, getFrequencyTypeOptions } from '../constants/Fixedlist';
 import RoundedInput from '../components/RoundedInput';
 import RoundedDropdown from '../components/RoundedDropdown';
-import {formatCurrencyValue, formatMonthDayYear} from '../helpers/Helper';
+import {formatCurrencyValue, formatMonthDayYear, formatDateForInput} from '../helpers/Helper';
 
 import {
   createGenericHandlers,
@@ -57,6 +57,21 @@ export default function EarningsPage(props) {
   // Declare fetch functions first to avoid temporal dead zone
   const fetchEarnings = async () => {
     const res = await axios.get(API_URL);
+    console.log('=== Earnings API Response ===');
+    console.log('Earnings data:', res.data);
+    if (res.data.length > 0) {
+      console.log('First Earning record dates:', {
+        startDate: res.data[0].startDate,
+        endDate: res.data[0].endDate,
+        lastUpdatedDate: res.data[0].lastUpdatedDate,
+        types: {
+          startDate: typeof res.data[0].startDate,
+          endDate: typeof res.data[0].endDate,
+          lastUpdatedDate: typeof res.data[0].lastUpdatedDate
+        }
+      });
+    }
+    console.log('=============================');
     setEarnings(res.data);
   };
 
@@ -97,8 +112,24 @@ export default function EarningsPage(props) {
   }, [searchText, earnings]);
 
   const handleRowEdit = (earning) => {
+    console.log('=== Earnings Page Debug ===');
+    console.log('Raw Earning object:', earning);
+    console.log('Earning startDate value:', earning.startDate);
+    console.log('Earning endDate value:', earning.endDate);
+    console.log('Earning lastUpdatedDate value:', earning.lastUpdatedDate);
+    console.log('Date types:', {
+      startDate: typeof earning.startDate,
+      endDate: typeof earning.endDate,
+      lastUpdatedDate: typeof earning.lastUpdatedDate
+    });
+    console.log('Date objects:', {
+      startDate: new Date(earning.startDate),
+      endDate: new Date(earning.endDate),
+      lastUpdatedDate: new Date(earning.lastUpdatedDate)
+    });
+    console.log('===========================');
     setEditRowId(earning.id);
-    setEditRowData(earning);
+    setEditRowData({ ...earning });
   };
 
   const handleRowChange = (e, col) => {
@@ -269,7 +300,7 @@ export default function EarningsPage(props) {
                     ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
                       <RoundedInput 
                         type="date" 
-                        value={newRow[key] || ''} 
+                        value={formatDateForInput(newRow[key]) || ''} 
                         onChange={e => setNewRow({ ...newRow, [key]: e.target.value })} 
                         placeholder={colHeaders[i]} 
                         disabled={editRowId !== null}
@@ -405,7 +436,7 @@ export default function EarningsPage(props) {
                         ) : key === 'startDate' || key === 'endDate' || key === 'lastUpdatedDate' ? (
                           <RoundedInput 
                             type="date" 
-                            value={editRowData[key] || ''} 
+                            value={formatDateForInput(editRowData[key]) || ''} 
                             onChange={e => handleRowChange(e, key)} 
                             placeholder={colHeaders[i]} 
                             style={{ border: '1px solid #1976d2' }}

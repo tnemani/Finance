@@ -1,12 +1,12 @@
-import FourOhOneKPage from './FourOhOneKPage';
+import FourOOneKPage from './FourOOneKPage';
 import SSNPage from './SSNPage';
 
 function RetirementPage(props) {
   return (
     <>
-      <FourOhOneKPage {...props} />
-      <div style={{ marginTop: 10 }} />
       <SSNPage {...props} />
+      <div style={{ marginTop: 10 }} />
+      <FourOOneKPage {...props} />
     </>
   );
 }

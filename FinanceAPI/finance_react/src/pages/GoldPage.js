@@ -9,7 +9,7 @@ import RoundedDropdown from '../components/RoundedDropdown';
 import goldIcon from '../components/icons/gold.png';
 import { inputTheme } from '../components/inputTheme';
 import { currencyOptions, getWeightOptions } from '../constants/Fixedlist';
-import { formatMonthDayYear } from '../helpers/Helper';
+import { formatMonthDayYear, formatDateForInput } from '../helpers/Helper';
 import {formatCurrencyValue} from '../helpers/Helper';
 import { ACTION_BUTTON_CONTAINER_STYLE } from '../constants/common';
 
@@ -359,7 +359,7 @@ export default function GoldPage() {
                           </div>
                         ) : (
                           <RoundedInput
-                            value={editRow[key] || ''}
+                            value={key === 'purchasedDate' ? formatDateForInput(editRow[key]) : editRow[key] || ''}
                             onChange={e => setEditRow({ ...editRow, [key]: e.target.value })}
                             placeholder={colHeaders[i]}
                             type={key === 'weight' || key === 'purchasedPrice' ? 'number' : key === 'purchasedDate' ? 'date' : 'text'}
