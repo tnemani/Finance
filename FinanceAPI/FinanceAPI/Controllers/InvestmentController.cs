@@ -29,7 +29,6 @@ namespace FinanceAPI.Controllers
                 UserShortName = i.User != null && i.User.ShortName != null ? i.User.ShortName.Trim() : null,
                 Type = i.Type != null ? i.Type.Trim() : null,
                 Qty = i.Qty,
-                CurrentValue = i.CurrentValue,
                 Symbol = i.Symbol != null ? i.Symbol.Trim() : null,
                 Currency = i.Currency != null ? i.Currency.Trim() : null,
                 StartDate = i.StartDate,
@@ -49,7 +48,6 @@ namespace FinanceAPI.Controllers
                 UserId = dto.UserId,
                 Type = dto.Type?.Trim(),
                 Qty = dto.Qty,
-                CurrentValue = dto.CurrentValue,
                 Symbol = dto.Symbol?.Trim(),
                 Currency = dto.Currency?.Trim(),
                 StartDate = dto.StartDate,
@@ -71,7 +69,6 @@ namespace FinanceAPI.Controllers
             existing.UserId = dto.UserId;
             existing.Type = dto.Type?.Trim();
             existing.Qty = dto.Qty;
-            existing.CurrentValue = dto.CurrentValue;
             existing.Symbol = dto.Symbol?.Trim();
             existing.Currency = dto.Currency?.Trim();
             existing.StartDate = dto.StartDate;
@@ -107,7 +104,6 @@ namespace FinanceAPI.Controllers
                 UserShortName = i.User != null && i.User.ShortName != null ? i.User.ShortName.Trim() : null,
                 Type = i.Type != null ? i.Type.Trim() : null,
                 Qty = i.Qty,
-                CurrentValue = i.CurrentValue,
                 Symbol = i.Symbol != null ? i.Symbol.Trim() : null,
                 Currency = i.Currency != null ? i.Currency.Trim() : null,
                 StartDate = i.StartDate,
@@ -127,7 +123,6 @@ namespace FinanceAPI.Controllers
                 UserId = dto.UserId,
                 Type = dto.Type?.Trim(),
                 Qty = dto.Qty,
-                CurrentValue = dto.CurrentValue,
                 Symbol = dto.Symbol?.Trim(),
                 Currency = dto.Currency?.Trim(),
                 StartDate = dto.StartDate,
@@ -149,7 +144,6 @@ namespace FinanceAPI.Controllers
             existing.UserId = dto.UserId;
             existing.Type = dto.Type?.Trim();
             existing.Qty = dto.Qty;
-            existing.CurrentValue = dto.CurrentValue;
             existing.Symbol = dto.Symbol?.Trim();
             existing.Currency = dto.Currency?.Trim();
             existing.StartDate = dto.StartDate;
@@ -185,7 +179,6 @@ namespace FinanceAPI.Controllers
                 UserShortName = i.User != null && i.User.ShortName != null ? i.User.ShortName.Trim() : null,
                 Type = i.Type != null ? i.Type.Trim() : null,
                 Qty = i.Qty,
-                CurrentValue = i.CurrentValue,
                 Symbol = i.Symbol != null ? i.Symbol.Trim() : null,
                 Currency = i.Currency != null ? i.Currency.Trim() : null,
                 StartDate = i.StartDate,
@@ -205,7 +198,6 @@ namespace FinanceAPI.Controllers
                 UserId = dto.UserId,
                 Type = dto.Type?.Trim(),
                 Qty = dto.Qty,
-                CurrentValue = dto.CurrentValue,
                 Symbol = dto.Symbol?.Trim(),
                 Currency = dto.Currency?.Trim(),
                 StartDate = dto.StartDate,
@@ -227,7 +219,6 @@ namespace FinanceAPI.Controllers
             existing.UserId = dto.UserId;
             existing.Type = dto.Type?.Trim();
             existing.Qty = dto.Qty;
-            existing.CurrentValue = dto.CurrentValue;
             existing.Symbol = dto.Symbol?.Trim();
             existing.Currency = dto.Currency?.Trim();
             existing.StartDate = dto.StartDate;

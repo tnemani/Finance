@@ -22,6 +22,6 @@ namespace FinanceAPI.DTOs
         public string? Financialnstitution { get => _financialnstitution?.Trim(); set => _financialnstitution = value; }
         private string? _description;
         public string? Description { get => _description?.Trim(); set => _description = value; }
-        public decimal? CurrentValue { get; set; }
+
     }
 }

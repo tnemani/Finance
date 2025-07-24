@@ -77,6 +77,9 @@ public partial class User
     public virtual ICollection<Earning> EarningSenderNavigations { get; set; } = new List<Earning>();
 
     [InverseProperty("User")]
+    public virtual ICollection<FourOOneK> FourOOneKs { get; set; } = new List<FourOOneK>();
+
+    [InverseProperty("User")]
     public virtual ICollection<Investment> Investments { get; set; } = new List<Investment>();
 
     [InverseProperty("DestinationUser")]
@@ -84,6 +87,9 @@ public partial class User
 
     [InverseProperty("SourceUser")]
     public virtual ICollection<PersonTransaction> PersonTransactionSourceUsers { get; set; } = new List<PersonTransaction>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<SSN> SSNs { get; set; } = new List<SSN>();
 
     [InverseProperty("User")]
     public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();

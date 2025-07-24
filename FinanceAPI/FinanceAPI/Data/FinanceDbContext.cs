@@ -34,7 +34,7 @@ public partial class FinanceDbContext : DbContext
 
     public virtual DbSet<Expense> Expenses { get; set; }
 
-    public virtual DbSet<Investment> Investments { get; set; }
+        public virtual DbSet<FourOOneK> FourOOneKs { get; set; }    public virtual DbSet<Investment> Investments { get; set; }
 
     public virtual DbSet<Jewlery> Jewleries { get; set; }
 
@@ -43,6 +43,8 @@ public partial class FinanceDbContext : DbContext
     public virtual DbSet<PersonTransaction> PersonTransactions { get; set; }
 
     public virtual DbSet<Setting> Settings { get; set; }
+
+    public virtual DbSet<SSN> SSNs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -257,6 +259,56 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
             entity.HasOne(d => d.User).WithMany(p => p.UserAddresses).HasConstraintName("FK_UserAddresses_UserAddresses");
         });
+
+        modelBuilder.Entity<FourOOneK>(entity =>
+    {
+        entity.HasKey(e => e.Id);
+        entity.Property(e => e.AssetClass).HasColumnType("nchar(50)");
+        entity.Property(e => e.PolicyNo).HasColumnType("nchar(20)");
+        entity.Property(e => e.Term).HasColumnType("nchar(20)");
+        entity.Property(e => e.Currency).HasColumnType("nchar(10)");
+        entity.Property(e => e.StartDate).HasColumnType("datetime");
+        entity.Property(e => e.MaturityDate).HasColumnType("datetime");
+        entity.Property(e => e.InvestmentAmount).HasColumnType("decimal(18,0)");
+        entity.Property(e => e.CurrentAmount).HasColumnType("decimal(18,0)");
+        entity.Property(e => e.Description).HasColumnType("nchar(100)");
+        
+        entity.HasOne(d => d.User)
+            .WithMany(p => p.FourOOneKs)
+            .HasForeignKey(d => d.UserId)
+            .HasConstraintName("FK_FourOOneK_Users");
+    });
+
+        modelBuilder.Entity<SSN>(entity =>
+    {
+        entity.ToTable("SSN");
+        entity.HasKey(e => e.Id);
+        
+        entity.Property(e => e.Currency)
+            .HasColumnType("nchar(10)")
+            .IsFixedLength();
+        
+        entity.Property(e => e.MonthlyAfter62)
+            .HasColumnType("decimal(18,0)");
+        
+        entity.Property(e => e.MonthlyAfter67)
+            .HasColumnType("decimal(18,0)");
+        
+        entity.Property(e => e.MonthlyAfter70)
+            .HasColumnType("decimal(18,0)");
+        
+        entity.Property(e => e.LastUpdatedDate)
+            .HasColumnType("datetime");
+        
+        entity.Property(e => e.Description)
+            .HasColumnType("nchar(100)")
+            .IsFixedLength();
+        
+        entity.HasOne(d => d.User)
+            .WithMany(p => p.SSNs)
+            .HasForeignKey(d => d.UserId)
+            .HasConstraintName("FK_SSN_Users");
+    });
 
         OnModelCreatingPartial(modelBuilder);
     }

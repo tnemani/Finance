@@ -26,15 +26,15 @@ public class EarningsController : ControllerBase
                 Id = e.Id,
                 Type = e.Type?.Trim(),
                 Frequency = e.Frequency?.Trim(),
-                StartDate = e.StartDate?.ToString("yyyy-MM-dd"),
+                StartDate = e.StartDate,
                 Sender = e.Sender,
                 Receiver = e.Receiver,
                 Item = e.Item?.Trim(),
                 Amount = e.Amount,
                 Currency = e.Currency?.Trim(),
-                EndDate = e.EndDate?.ToString("yyyy-MM-dd"),
+                EndDate = e.EndDate,
                 OwnerId = e.OwnerId,
-                LastUpdatedDate = e.LastUpdatedDate?.ToString("yyyy-MM-dd"),
+                LastUpdatedDate = e.LastUpdatedDate,
                 Description = e.Description?.Trim(),
                 OwnerName = e.Owner != null ? (e.Owner.FirstName + " " + e.Owner.LastName).Trim() : null,
                 SenderName = e.SenderNavigation != null ? (e.SenderNavigation.FirstName + " " + e.SenderNavigation.LastName).Trim() : null,
@@ -57,15 +57,15 @@ public class EarningsController : ControllerBase
             Id = e.Id,
             Type = e.Type?.Trim(),
             Frequency = e.Frequency?.Trim(),
-            StartDate = e.StartDate?.ToString("yyyy-MM-dd"),
+            StartDate = e.StartDate,
             Sender = e.Sender,
             Receiver = e.Receiver,
             Item = e.Item?.Trim(),
             Amount = e.Amount,
             Currency = e.Currency?.Trim(),
-            EndDate = e.EndDate?.ToString("yyyy-MM-dd"),
+            EndDate = e.EndDate,
             OwnerId = e.OwnerId,
-            LastUpdatedDate = e.LastUpdatedDate?.ToString("yyyy-MM-dd"),
+            LastUpdatedDate = e.LastUpdatedDate,
             Description = e.Description?.Trim(),
             OwnerName = e.Owner != null ? (e.Owner.FirstName + " " + e.Owner.LastName).Trim() : null,
             SenderName = e.SenderNavigation != null ? (e.SenderNavigation.FirstName + " " + e.SenderNavigation.LastName).Trim() : null,
@@ -80,15 +80,15 @@ public class EarningsController : ControllerBase
         {
             Type = dto.Type?.Trim(),
             Frequency = dto.Frequency?.Trim(),
-            StartDate = !string.IsNullOrEmpty(dto.StartDate) ? DateTime.Parse(dto.StartDate) : null,
+            StartDate = dto.StartDate,
             Sender = dto.Sender,
             Receiver = dto.Receiver,
             Item = dto.Item?.Trim(),
             Amount = dto.Amount,
             Currency = dto.Currency?.Trim(),
-            EndDate = !string.IsNullOrEmpty(dto.EndDate) ? DateTime.Parse(dto.EndDate) : null,
+            EndDate = dto.EndDate,
             OwnerId = dto.OwnerId,
-            LastUpdatedDate = !string.IsNullOrEmpty(dto.LastUpdatedDate) ? DateTime.Parse(dto.LastUpdatedDate) : null,
+            LastUpdatedDate = dto.LastUpdatedDate,
             Description = dto.Description?.Trim()
         };
         _context.Earnings.Add(earning);
@@ -104,15 +104,15 @@ public class EarningsController : ControllerBase
         if (earning == null) return NotFound();
         earning.Type = dto.Type?.Trim();
         earning.Frequency = dto.Frequency?.Trim();
-        earning.StartDate = !string.IsNullOrEmpty(dto.StartDate) ? DateTime.Parse(dto.StartDate) : null;
+        earning.StartDate = dto.StartDate;
         earning.Sender = dto.Sender;
         earning.Receiver = dto.Receiver;
         earning.Item = dto.Item?.Trim();
         earning.Amount = dto.Amount;
         earning.Currency = dto.Currency?.Trim();
-        earning.EndDate = !string.IsNullOrEmpty(dto.EndDate) ? DateTime.Parse(dto.EndDate) : null;
+        earning.EndDate = dto.EndDate;
         earning.OwnerId = dto.OwnerId;
-        earning.LastUpdatedDate = !string.IsNullOrEmpty(dto.LastUpdatedDate) ? DateTime.Parse(dto.LastUpdatedDate) : null;
+        earning.LastUpdatedDate = dto.LastUpdatedDate;
         earning.Description = dto.Description?.Trim();
         _context.SaveChanges();
         return NoContent();

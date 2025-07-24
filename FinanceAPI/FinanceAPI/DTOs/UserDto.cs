@@ -13,7 +13,7 @@ public class UserDto
     public string? Email1 { get; set; }
     public string? Email2 { get; set; }
     public string? WorkEmail { get; set; }
-    public string? DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
     public string? Ssn { get; set; }
     public string? Aadhar { get; set; }
     public string? Pan { get; set; }

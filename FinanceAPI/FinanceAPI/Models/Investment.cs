@@ -19,9 +19,6 @@ public partial class Investment
     [Column(TypeName = "decimal(18, 6)")]
     public decimal? Qty { get; set; }
 
-    [Column(TypeName = "decimal(18, 0)")]
-    public decimal? CurrentValue { get; set; }
-
     [StringLength(20)]
     [Column(TypeName = "nchar(20)")]
     public string? Symbol { get; set; }

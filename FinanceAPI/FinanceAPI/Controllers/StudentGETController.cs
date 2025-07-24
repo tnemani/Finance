@@ -93,7 +93,6 @@ namespace FinanceAPI.Controllers
             existing.PolicyNo = investment.PolicyNo != null ? investment.PolicyNo.Trim() : null;
             existing.Financialnstitution = investment.Financialnstitution != null ? investment.Financialnstitution.Trim() : null;
             existing.Description = investment.Description != null ? investment.Description.Trim() : null;
-            existing.CurrentValue = investment.CurrentValue;
             await _context.SaveChangesAsync();
             return Ok(existing);
         }

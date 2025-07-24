@@ -34,7 +34,7 @@ public class UsersController : ControllerBase
                 Email1 = u.Email1?.Trim(),
                 Email2 = u.Email2?.Trim(),
                 WorkEmail = u.WorkEmail?.Trim(),
-                DateOfBirth = u.DateOfBirth.HasValue ? u.DateOfBirth.Value.ToString("yyyy-MM-dd") : null,
+                DateOfBirth = u.DateOfBirth,
                 Ssn = u.Ssn?.Trim(),
                 Aadhar = u.Aadhar?.Trim(),
                 Pan = u.Pan?.Trim(),
@@ -91,7 +91,7 @@ public class UsersController : ControllerBase
             Email1 = u.Email1?.Trim(),
             Email2 = u.Email2?.Trim(),
             WorkEmail = u.WorkEmail?.Trim(),
-            DateOfBirth = u.DateOfBirth.HasValue ? u.DateOfBirth.Value.ToString("yyyy-MM-dd") : null,
+            DateOfBirth = u.DateOfBirth,
             Ssn = u.Ssn?.Trim(),
             Aadhar = u.Aadhar?.Trim(),
             Pan = u.Pan?.Trim(),
@@ -141,7 +141,7 @@ public class UsersController : ControllerBase
             Email1 = dto.Email1?.Trim(),
             Email2 = dto.Email2?.Trim(),
             WorkEmail = dto.WorkEmail?.Trim(),
-            DateOfBirth = !string.IsNullOrEmpty(dto.DateOfBirth) ? DateTime.Parse(dto.DateOfBirth) : null,
+            DateOfBirth = dto.DateOfBirth,
             Ssn = dto.Ssn?.Trim(),
             Aadhar = dto.Aadhar?.Trim(),
             Pan = dto.Pan?.Trim(),
@@ -186,7 +186,7 @@ public class UsersController : ControllerBase
         user.Email1 = dto.Email1?.Trim();
         user.Email2 = dto.Email2?.Trim();
         user.WorkEmail = dto.WorkEmail?.Trim();
-        user.DateOfBirth = !string.IsNullOrEmpty(dto.DateOfBirth) ? DateTime.Parse(dto.DateOfBirth) : null;
+        user.DateOfBirth = dto.DateOfBirth;
         user.Ssn = dto.Ssn?.Trim();
         user.Aadhar = dto.Aadhar?.Trim();
         user.Pan = dto.Pan?.Trim();
