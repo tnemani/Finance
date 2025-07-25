@@ -253,7 +253,7 @@ export default function UsersPage() {
 
     // Custom grid to show addresses as internal grid, using consistent column definitions
     const renderUsersTable = (expandedRowsOverride) => {
-      if (!Array.isArray(filteredUsers) || filteredUsers.length === 0) return <tr><td colSpan={USER_COLUMNS.keys.length + 2}>No users</td></tr>;
+    if (!Array.isArray(filteredUsers) || filteredUsers.length === 0) return <tr><td colSpan={USER_COLUMNS.keys.length + 2}>No users</td></tr>;
 
       return (
         <>
@@ -480,7 +480,7 @@ export default function UsersPage() {
                                   onChange={e => setNewRow({ ...newRow, [key]: e.target.value })}
                                   placeholder={DETAIL_COLUMNS.headers[idx]}
                                   type={key === 'dateOfBirth' ? 'date' : 'text'}
-                                  maxLength={key === 'ssn' || key === 'pan' || key === 'aadhar' ? 16 : key === 'notes' ? 256 : undefined}
+                                  //maxLength={key === 'ssn' || key === 'pan' || key === 'aadhar' ? 16 : key === 'notes' ? 256 : undefined}
                                   colFonts={detailColFonts}
                                   colHeaders={DETAIL_COLUMNS.headers}
                                   allRows={allRows}

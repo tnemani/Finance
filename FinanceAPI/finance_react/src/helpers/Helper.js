@@ -28,7 +28,8 @@ export function getInputWidth(colFonts, colHeaders, allRows, colKey, i) {
     getTextWidth((row && row[colKey]) ? String(row[colKey]) : '', font)
   );
   const placeholderWidth = getTextWidth(colHeaders[i] || '', font);
-  return Math.max(headerWidth, ...cellWidths, placeholderWidth) + 24; // 24px for padding/buffer
+  //return Math.max(headerWidth, ...cellWidths, placeholderWidth); // 24px for padding/buffer
+  return Math.max(...cellWidths, 0);
 }
 
 
